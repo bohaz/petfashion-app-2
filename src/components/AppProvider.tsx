@@ -258,14 +258,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // ── Value ─────────────────────────────────────────────────
 
   const value = {
-    dogs, appointments, businessExpenses, homeExpenses, settings, loading,
-    upsertDog, deleteDog,
-    upsertAppointment, deleteAppointment, completeAppointment, markFlag,
-    upsertBusinessExpense, deleteBusinessExpense,
-    upsertHomeExpense, deleteHomeExpense,
+    dogs,
+    appointments,
+    businessExpenses,
+    homeExpenses,
+    settings,
+    loading,
+
+    saveDog: upsertDog,
+    deleteDog,
+
+    saveAppointment: upsertAppointment,
+    deleteAppointment,
+    completeAppointment,
+    markFlag,
+
+    saveBusinessExpense: upsertBusinessExpense,
+    deleteBusinessExpense,
+
+    saveHomeExpense: upsertHomeExpense,
+    deleteHomeExpense,
+
     saveSettings,
     showToast,
-    modal, setModal,
+    modal,
+    setModal,
   }
 
   return (

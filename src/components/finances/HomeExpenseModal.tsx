@@ -6,29 +6,79 @@ import { ModalShell } from '@/components/ui'
 import { HOME_CATEGORIES } from '@/lib/constants'
 import type { HomeExpense } from '@/lib/types'
 
-interface Props { initial: Partial<HomeExpense> | null; onClose: () => void }
+interface Props {
+  expense?: Partial<HomeExpense> | null
+  onClose: () => void
+}
 
-export function HomeExpenseModal({ initial, onClose }: Props) {
-  const { upsertHomeExpense, deleteHomeExpense, showToast } = useApp()
-  const isEdit = !!initial?.id
+export function HomeExpenseModal({ expense, onClose }: Props) {
+  const { saveHomeExpense, deleteHomeExpense, setModal } = useApp()
 
-  const [data, setData] = useState({
-    date:        initial?.date ? initial.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
-    category:    initial?.category    || 'mercado',
-    amount:      String(initial?.amount || ''),
-    description: initial?.description || '',
-  })
+  const isEdit = !!expense?.id
+  const [saving, setSaving] = useState(false)
 
-  const handleSubmit = async () => {
-    if (!data.amount || parseInt(data.amount) <= 0) { showToast('Falta el monto', 'error'); return }
-    await upsertHomeExpense({
-      ...(isEdit ? { id: initial!.id } : {}),
-      date: data.date,
-      category: data.category,
-      amount: parseInt(data.amount),
-      description: data.description,
-    })
+  const today = new Date().toISOString().slice(0, 10)
+
+  const [category, setCategory] = useState(
+    expense?.category || Object.keys(HOME_CATEGORIES)[0]
+  )
+
+  const [amount, setAmount] = useState(
+    String(expense?.amount || '')
+  )
+
+  const [date, setDate] = useState(
+    expense?.date ? expense.date.slice(0, 10) : today
+  )
+
+  const [description, setDescription] = useState(
+    expense?.description || ''
+  )
+
+  const handleSave = async () => {
+    const parsedAmount = parseFloat(amount)
+
+    if (
+      !date ||
+      !amount ||
+      Number.isNaN(parsedAmount) ||
+      parsedAmount <= 0
+    ) {
+      return
+    }
+
+    setSaving(true)
+
+    const data: Partial<HomeExpense> = {
+      ...(expense || {}),
+      category,
+      amount: parsedAmount,
+      date,
+      description: description.trim() || undefined,
+    }
+
+    await saveHomeExpense(data)
+
+    setSaving(false)
     onClose()
+  }
+
+  const handleDelete = () => {
+    if (!expense?.id) return
+
+    setModal({
+      type: 'confirm',
+      data: {
+        title: '¿Eliminar gasto?',
+        message: 'Esta acción no se puede deshacer.',
+        confirmLabel: 'Eliminar',
+        danger: true,
+        onConfirm: async () => {
+          await deleteHomeExpense(expense.id!)
+          onClose()
+        },
+      },
+    })
   }
 
   return (
@@ -36,65 +86,131 @@ export function HomeExpenseModal({ initial, onClose }: Props) {
       title={isEdit ? 'Editar gasto' : 'Nuevo gasto del hogar'}
       onClose={onClose}
       footer={
-        <div className="space-y-2">
-          <button onClick={handleSubmit} className="w-full bg-indigo-700 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-600 transition">
-            {isEdit ? 'Guardar' : 'Registrar gasto'}
-          </button>
+        <div className="flex gap-2">
           {isEdit && (
-            <button onClick={async () => { await deleteHomeExpense(initial!.id!); onClose() }}
-              className="w-full text-red-600 text-sm font-semibold py-2 hover:bg-red-50 rounded-xl transition">
-              Eliminar gasto
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold"
+              style={{
+                background: 'rgba(239,68,68,0.08)',
+                color: '#f87171',
+                border: '1px solid rgba(239,68,68,0.2)',
+              }}
+            >
+              Eliminar
             </button>
           )}
+
+          <button
+            onClick={handleSave}
+            disabled={saving || !amount || !date}
+            className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+            style={{
+              background: 'rgba(99,102,241,0.9)',
+              color: 'white',
+            }}
+          >
+            {saving
+              ? 'Guardando…'
+              : isEdit
+                ? 'Guardar cambios'
+                : 'Registrar gasto'}
+          </button>
         </div>
       }
     >
-      <div className="space-y-4">
-        {/* Home badge */}
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4338ca" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
+      <div className="flex flex-col gap-4">
+        <div
+          className="rounded-xl p-3 flex items-center gap-2"
+          style={{
+            background: 'rgba(99,102,241,0.07)',
+            border: '1px solid rgba(99,102,241,0.2)',
+          }}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#a5b4fc"
+            strokeWidth="2"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
-          <p className="text-xs font-semibold text-indigo-800">Gasto del hogar — separado del negocio</p>
+
+          <p
+            className="text-xs font-medium"
+            style={{ color: '#a5b4fc' }}
+          >
+            Gasto del hogar — no afecta las finanzas del negocio
+          </p>
         </div>
 
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 block">Fecha</label>
-          <input type="date" value={data.date} onChange={e => setData({ ...data, date: e.target.value })}
-            className="w-full bg-white border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-stone-400" />
-        </div>
+          <label className="block mb-1.5">Categoría</label>
 
-        <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-2 block">Categoría</label>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(HOME_CATEGORIES).map(([k, v]) => (
-              <button key={k} onClick={() => setData({ ...data, category: k })}
-                className={`p-3 rounded-xl border text-left transition ${
-                  data.category === k ? 'border-indigo-700 bg-indigo-700 text-white' : 'border-stone-200 bg-white hover:border-stone-300'
-                }`}>
-                <p className="font-bold text-sm">{v.label}</p>
-                {v.desc && <p className={`text-[10px] mt-0.5 ${data.category === k ? 'text-white/70' : 'text-stone-500'}`}>{v.desc}</p>}
-              </button>
+          <select
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            className="w-full"
+          >
+            {Object.entries(HOME_CATEGORIES).map(([key, value]) => (
+              <option key={key} value={key}>
+                {(value as { label: string }).label}
+              </option>
             ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block mb-1.5">Monto</label>
+
+            <div className="relative">
+              <span
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+                style={{ color: '#a5b4fc' }}
+              >
+                $
+              </span>
+
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                placeholder="0"
+                className="w-full pl-8"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block mb-1.5">Fecha</label>
+
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="w-full"
+            />
           </div>
         </div>
 
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 block">Monto</label>
-          <div className="flex items-baseline gap-1 bg-white border border-stone-200 rounded-xl px-3 py-2">
-            <span className="text-stone-400 text-xl">$</span>
-            <input type="number" inputMode="numeric" value={data.amount} onChange={e => setData({ ...data, amount: e.target.value })}
-              placeholder="0"
-              className="w-full text-2xl font-extrabold tabular bg-transparent focus:outline-none" />
-          </div>
-        </div>
+          <label className="block mb-1.5">
+            Descripción (opcional)
+          </label>
 
-        <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 block">Descripción</label>
-          <input type="text" value={data.description} onChange={e => setData({ ...data, description: e.target.value })}
-            placeholder="Detalle opcional"
-            className="w-full bg-white border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-stone-400" />
+          <input
+            type="text"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="¿En qué se gastó?"
+            className="w-full"
+          />
         </div>
       </div>
     </ModalShell>

@@ -2,46 +2,70 @@
 
 import { useState } from 'react'
 import { useApp } from '@/components/AppProvider'
-import { ModalShell, Field } from '@/components/ui'
+import { ModalShell } from '@/components/ui'
 import { sizeFromWeight } from '@/lib/utils'
-import type { Dog } from '@/lib/types'
+import type { Dog, DogSize, DogCoat } from '@/lib/types'
 
-interface Props { initial: Partial<Dog> | null; onClose: () => void }
+interface Props {
+  dog?: Partial<Dog> | null
+  onClose: () => void
+}
 
-export function DogModal({ initial, onClose }: Props) {
-  const { upsertDog, showToast } = useApp()
-  const isEdit = !!initial?.id
+export function DogModal({ dog, onClose }: Props) {
+  const { saveDog } = useApp()
+  const isEdit = !!dog?.id
+  const [saving, setSaving] = useState(false)
 
-  const [data, setData] = useState({
-    name:       initial?.name       || '',
-    breed:      initial?.breed      || '',
-    weight:     String(initial?.weight || ''),
-    size:       initial?.size       || '',
-    coat:       initial?.coat       || 'corto' as 'corto' | 'doble',
-    owner_name: initial?.owner_name || '',
-    phone:      initial?.phone      || '',
-    notes:      initial?.notes      || '',
-  })
+  const [name, setName] = useState(dog?.name || '')
+  const [breed, setBreed] = useState(dog?.breed || '')
+  const [weight, setWeight] = useState(String(dog?.weight || ''))
+  const [size, setSize] = useState<DogSize>((dog?.size as DogSize) || 'S')
+  const [coat, setCoat] = useState<DogCoat>((dog?.coat as DogCoat) || 'corto')
+  const [ownerName, setOwnerName] = useState(dog?.owner_name || '')
+  const [phone, setPhone] = useState(dog?.phone || '')
+  const [notes, setNotes] = useState(dog?.notes || '')
 
-  const autoSize = sizeFromWeight(data.weight)
+  const handleWeightChange = (v: string) => {
+    setWeight(v)
+    const kg = parseFloat(v)
+    if (!isNaN(kg) && kg > 0) setSize(sizeFromWeight(kg))
+  }
 
-  const handleSubmit = async () => {
-    if (!data.name.trim()) { showToast('Falta el nombre', 'error'); return }
-    if (!data.owner_name.trim()) { showToast('Falta el nombre del dueño', 'error'); return }
-    await upsertDog({
-      ...(isEdit ? { id: initial!.id! } : {}),
-      ...data,
-      weight: parseFloat(data.weight) || 0,
-      size: (data.size || autoSize) as Dog['size'],
-    })
+  const handleSave = async () => {
+    if (!name.trim()) return
+
+    setSaving(true)
+
+    const data: Partial<Dog> & { name: string } = {
+      ...(dog || {}),
+      name: name.trim(),
+      breed: breed.trim() || undefined,
+      weight: weight ? parseFloat(weight) : undefined,
+      size,
+      coat,
+      owner_name: ownerName.trim() || undefined,
+      phone: phone.trim() || undefined,
+      notes: notes.trim() || undefined,
+    }
+
+    await saveDog(data)
+
+    setSaving(false)
     onClose()
   }
 
-  const SIZES_LABELS = [
-    { v: 'XS', l: 'XS (0–5 kg)' },
-    { v: 'S',  l: 'S (5–10 kg)' },
-    { v: 'M',  l: 'M (10–20 kg)' },
-    { v: 'L',  l: 'L (20–30 kg)' },
+  const SIZE_OPTIONS: DogSize[] = ['XS', 'S', 'M', 'L']
+
+  const SIZE_LABELS: Record<DogSize, string> = {
+    XS: 'XS · 0–5 kg',
+    S: 'S · 5–10 kg',
+    M: 'M · 10–20 kg',
+    L: 'L · 20+ kg',
+  }
+
+  const COAT_OPTIONS: { value: DogCoat; label: string }[] = [
+    { value: 'corto', label: 'Corto' },
+    { value: 'doble', label: 'Doble capa' },
   ]
 
   return (
@@ -49,58 +73,130 @@ export function DogModal({ initial, onClose }: Props) {
       title={isEdit ? 'Editar perro' : 'Nuevo perro'}
       onClose={onClose}
       footer={
-        <button onClick={handleSubmit} className="w-full bg-stone-900 text-white py-3.5 rounded-xl font-bold hover:bg-stone-800 transition">
-          {isEdit ? 'Guardar cambios' : 'Crear perro'}
+        <button
+          onClick={handleSave}
+          disabled={saving || !name.trim()}
+          className="btn-gold w-full"
+        >
+          {saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Agregar perro'}
         </button>
       }
     >
-      <div className="space-y-3">
-        <Field label="Nombre del perro *" value={data.name} onChange={v => setData({ ...data, name: v })} />
-        <Field label="Raza" value={data.breed} onChange={v => setData({ ...data, breed: v })} />
-
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="Peso (kg)" value={data.weight} onChange={v => setData({ ...data, weight: v })} type="number" inputMode="decimal" />
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 block">
-              Talla {data.weight && <span className="text-emerald-700">(auto: {autoSize})</span>}
-            </label>
+            <label className="block mb-1.5">Nombre *</label>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Max"
+              className="w-full"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1.5">Raza</label>
+            <input
+              value={breed}
+              onChange={e => setBreed(e.target.value)}
+              placeholder="Golden retriever"
+              className="w-full"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block mb-1.5">Peso (kg)</label>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={weight}
+              onChange={e => handleWeightChange(e.target.value)}
+              placeholder="0.0"
+              className="w-full"
+            />
+
+            <p className="text-xs mt-1" style={{ color: 'rgba(245,240,232,0.3)' }}>
+              Se sugiere la talla automáticamente
+            </p>
+          </div>
+
+          <div>
+            <label className="block mb-1.5">Talla</label>
             <select
-              value={data.size || autoSize}
-              onChange={e => setData({ ...data, size: e.target.value })}
-              className="w-full bg-white border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-stone-400"
+              value={size}
+              onChange={e => setSize(e.target.value as DogSize)}
+              className="w-full"
             >
-              {SIZES_LABELS.map(s => <option key={s.v} value={s.v}>{s.l}</option>)}
+              {SIZE_OPTIONS.map(s => (
+                <option key={s} value={s}>
+                  {SIZE_LABELS[s]}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
-        {/* Coat type */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 block">Tipo de manto</label>
+          <label className="block mb-1.5">Tipo de manto</label>
+
           <div className="flex gap-2">
-            {(['corto', 'doble'] as const).map(c => (
-              <button key={c} onClick={() => setData({ ...data, coat: c })}
-                className={`flex-1 py-3 rounded-xl border font-semibold text-sm transition ${
-                  data.coat === c ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-200 bg-white hover:border-stone-300'
-                }`}>
-                {c === 'corto' ? 'Manto corto' : 'Doble capa'}
+            {COAT_OPTIONS.map(o => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => setCoat(o.value)}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
+                style={
+                  coat === o.value
+                    ? {
+                        background: 'var(--pf-gold)',
+                        color: 'var(--pf-bg)',
+                      }
+                    : {
+                        background: 'var(--pf-bg3)',
+                        color: 'rgba(245,240,232,0.5)',
+                        border: '1px solid var(--pf-border)',
+                      }
+                }
+              >
+                {o.label}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-stone-500 mt-1">Afecta el precio en Solo Baño talla L</p>
-        </div>
-
-        <div className="pt-3 border-t border-stone-200 space-y-3">
-          <Field label="Nombre del dueño *" value={data.owner_name} onChange={v => setData({ ...data, owner_name: v })} />
-          <Field label="Teléfono WhatsApp" value={data.phone} onChange={v => setData({ ...data, phone: v })}
-            inputMode="tel" hint="Incluye 56 (ej: 56945570410)" />
         </div>
 
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 block">Notas / Alergias</label>
-          <textarea value={data.notes} onChange={e => setData({ ...data, notes: e.target.value })} rows={3}
-            placeholder="Alergias, comportamiento, preferencias…"
-            className="w-full bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-stone-400 resize-none" />
+          <label className="block mb-1.5">Nombre del dueño/a</label>
+          <input
+            value={ownerName}
+            onChange={e => setOwnerName(e.target.value)}
+            placeholder="María González"
+            className="w-full"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1.5">Teléfono</label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            placeholder="+56912345678"
+            className="w-full"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1.5">Notas internas</label>
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Alergias, comportamiento, instrucciones…"
+            rows={3}
+            className="w-full resize-none"
+          />
         </div>
       </div>
     </ModalShell>

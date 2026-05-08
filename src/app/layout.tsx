@@ -1,5 +1,18 @@
 import type { Metadata, Viewport } from 'next'
+import { Jost, Playfair_Display } from 'next/font/google'
 import './globals.css'
+
+const jost = Jost({
+  subsets: ['latin'],
+  variable: '--font-jost',
+  display: 'swap',
+})
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Pet Fashion · Gestión',
@@ -10,18 +23,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0c0a09',
+  themeColor: '#0f0e0c',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body className="bg-stone-50 text-stone-900 antialiased" style={{ fontFamily: "'Manrope', system-ui, -apple-system, sans-serif" }}>
+    <html lang="es" className={`${jost.variable} ${playfair.variable}`}>
+      <body style={{ background: 'var(--pf-bg)', color: 'var(--pf-cream)' }}>
         {children}
       </body>
     </html>

@@ -6,29 +6,65 @@ import { ModalShell } from '@/components/ui'
 import { BUSINESS_CATEGORIES } from '@/lib/constants'
 import type { BusinessExpense } from '@/lib/types'
 
-interface Props { initial: Partial<BusinessExpense> | null; onClose: () => void }
+interface Props {
+  expense?: Partial<BusinessExpense> | null
+  onClose: () => void
+}
 
-export function BusinessExpenseModal({ initial, onClose }: Props) {
-  const { upsertBusinessExpense, deleteBusinessExpense, showToast } = useApp()
-  const isEdit = !!initial?.id
+export function BusinessExpenseModal({ expense, onClose }: Props) {
+  const { saveBusinessExpense, deleteBusinessExpense, setModal } = useApp()
 
-  const [data, setData] = useState({
-    date:        initial?.date ? initial.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
-    category:    initial?.category    || 'insumos',
-    amount:      String(initial?.amount || ''),
-    description: initial?.description || '',
-  })
+  const isEdit = !!expense?.id
+  const [saving, setSaving] = useState(false)
 
-  const handleSubmit = async () => {
-    if (!data.amount || parseInt(data.amount) <= 0) { showToast('Falta el monto', 'error'); return }
-    await upsertBusinessExpense({
-      ...(isEdit ? { id: initial!.id } : {}),
-      date: data.date,
-      category: data.category,
-      amount: parseInt(data.amount),
-      description: data.description,
-    })
+  const today = new Date().toISOString().slice(0, 10)
+
+  const [category, setCategory] = useState(
+    expense?.category || Object.keys(BUSINESS_CATEGORIES)[0]
+  )
+  const [amount, setAmount] = useState(String(expense?.amount || ''))
+  const [date, setDate] = useState(
+    expense?.date ? expense.date.slice(0, 10) : today
+  )
+  const [description, setDescription] = useState(expense?.description || '')
+
+  const handleSave = async () => {
+    const parsedAmount = parseFloat(amount)
+
+    if (!date || !amount || Number.isNaN(parsedAmount) || parsedAmount <= 0) return
+
+    setSaving(true)
+
+    const data: Partial<BusinessExpense> = {
+      ...(expense || {}),
+      category,
+      amount: parsedAmount,
+      date,
+      description: description.trim() || undefined,
+    }
+
+    await saveBusinessExpense(data)
+
+    setSaving(false)
     onClose()
+  }
+
+  const handleDelete = () => {
+    if (!expense?.id) return
+
+    setModal({
+      type: 'confirm',
+      data: {
+        title: '¿Eliminar egreso?',
+        message: 'Esta acción no se puede deshacer.',
+        confirmLabel: 'Eliminar',
+        danger: true,
+        onConfirm: async () => {
+          await deleteBusinessExpense(expense.id!)
+          onClose()
+        },
+      },
+    })
   }
 
   return (
@@ -36,56 +72,91 @@ export function BusinessExpenseModal({ initial, onClose }: Props) {
       title={isEdit ? 'Editar egreso' : 'Nuevo egreso'}
       onClose={onClose}
       footer={
-        <div className="space-y-2">
-          <button onClick={handleSubmit} className="w-full bg-stone-900 text-white py-3.5 rounded-xl font-bold hover:bg-stone-800 transition">
-            {isEdit ? 'Guardar' : 'Registrar egreso'}
-          </button>
+        <div className="flex gap-2">
           {isEdit && (
-            <button onClick={async () => { await deleteBusinessExpense(initial!.id!); onClose() }}
-              className="w-full text-red-600 text-sm font-semibold py-2 hover:bg-red-50 rounded-xl transition">
-              Eliminar egreso
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold"
+              style={{
+                background: 'rgba(239,68,68,0.08)',
+                color: '#f87171',
+                border: '1px solid rgba(239,68,68,0.2)',
+              }}
+            >
+              Eliminar
             </button>
           )}
+
+          <button
+            onClick={handleSave}
+            disabled={saving || !amount || !date}
+            className="flex-1 btn-gold"
+          >
+            {saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Registrar egreso'}
+          </button>
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 block">Fecha</label>
-          <input type="date" value={data.date} onChange={e => setData({ ...data, date: e.target.value })}
-            className="w-full bg-white border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-stone-400" />
-        </div>
-
-        <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-2 block">Categoría</label>
-          <div className="grid grid-cols-2 gap-2">
-            {Object.entries(BUSINESS_CATEGORIES).map(([k, v]) => (
-              <button key={k} onClick={() => setData({ ...data, category: k })}
-                className={`p-3 rounded-xl border text-left transition ${
-                  data.category === k ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-200 bg-white hover:border-stone-300'
-                }`}>
-                <p className="font-bold text-sm">{v.label}</p>
-                {v.desc && <p className={`text-[10px] mt-0.5 ${data.category === k ? 'text-white/70' : 'text-stone-500'}`}>{v.desc}</p>}
-              </button>
+          <label className="block mb-1.5">Categoría</label>
+          <select
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            className="w-full"
+          >
+            {Object.entries(BUSINESS_CATEGORIES).map(([key, value]) => (
+              <option key={key} value={key}>
+                {(value as { label: string }).label}
+              </option>
             ))}
+          </select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block mb-1.5">Monto</label>
+
+            <div className="relative">
+              <span
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+                style={{ color: 'var(--pf-gold)' }}
+              >
+                $
+              </span>
+
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                placeholder="0"
+                className="w-full pl-8"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block mb-1.5">Fecha</label>
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="w-full"
+            />
           </div>
         </div>
 
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 block">Monto</label>
-          <div className="flex items-baseline gap-1 bg-white border border-stone-200 rounded-xl px-3 py-2">
-            <span className="text-stone-400 text-xl">$</span>
-            <input type="number" inputMode="numeric" value={data.amount} onChange={e => setData({ ...data, amount: e.target.value })}
-              placeholder="0"
-              className="w-full text-2xl font-extrabold tabular bg-transparent focus:outline-none" />
-          </div>
-        </div>
-
-        <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-1.5 block">Descripción</label>
-          <input type="text" value={data.description} onChange={e => setData({ ...data, description: e.target.value })}
-            placeholder="Detalle opcional"
-            className="w-full bg-white border border-stone-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-stone-400" />
+          <label className="block mb-1.5">Descripción (opcional)</label>
+          <input
+            type="text"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Detalle del gasto…"
+            className="w-full"
+          />
         </div>
       </div>
     </ModalShell>

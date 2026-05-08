@@ -20,27 +20,36 @@ export function AppointmentCard({ apt, dogs, onClick, compact }: Props) {
   return (
     <button
       onClick={onClick}
-      className="w-full bg-white border border-stone-200 rounded-2xl p-3.5 text-left hover:border-stone-300 transition active:scale-[0.99]"
-    >
+      className="w-full rounded-xl p-3.5 text-left transition-all active:scale-[0.99]"
+      style={{ background: 'var(--pf-bg2)', border: '1px solid var(--pf-border)' }}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--pf-gold-border)')}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--pf-border)')}>
       <div className="flex items-start gap-3">
-        <div className="flex flex-col items-center justify-center bg-stone-100 rounded-xl px-2.5 py-2 min-w-[58px]">
-          <span className="text-base font-extrabold tabular">{fmtTime(apt.start_time)}</span>
-          <span className="text-[10px] text-stone-500 tabular mt-0.5">→ {fmtTime(apt.end_time)}</span>
+        {/* Time block */}
+        <div className="flex flex-col items-center justify-center rounded-lg px-2.5 py-2 min-w-[56px] shrink-0"
+             style={{ background: 'var(--pf-bg3)', border: '1px solid var(--pf-border)' }}>
+          <span className="text-sm font-bold tabular text-white">{fmtTime(apt.start_time)}</span>
+          <span className="text-[9px] tabular mt-0.5" style={{ color: 'rgba(245,240,232,0.35)' }}>
+            → {fmtTime(apt.end_time)}
+          </span>
         </div>
+
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <p className="font-bold text-stone-900 truncate">{name}</p>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${sb.c}`}>{sb.l}</span>
+            <p className="font-semibold text-sm truncate text-white">{name}</p>
+            <span className={sb.c}>{sb.l}</span>
           </div>
-          <p className="text-xs text-stone-600 truncate">
+          <p className="text-xs truncate" style={{ color: 'rgba(245,240,232,0.45)' }}>
             {SERVICES[apt.service]?.label || apt.service}
             {apt.qty > 1 ? ` × ${apt.qty}` : ''}
           </p>
           {!compact && owner && (
-            <p className="text-xs text-stone-500 truncate mt-0.5">{owner}</p>
+            <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(245,240,232,0.3)' }}>{owner}</p>
           )}
           {apt.price > 0 && (
-            <p className="text-sm font-bold text-emerald-700 mt-1 tabular">{fmtCLP(apt.price)}</p>
+            <p className="text-sm font-bold mt-1.5 tabular" style={{ color: 'var(--pf-gold-l)' }}>
+              {fmtCLP(apt.price)}
+            </p>
           )}
         </div>
       </div>

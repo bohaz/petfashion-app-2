@@ -41,7 +41,6 @@ export interface Appointment {
   review_requested: boolean
   completed_at?: string
   created_by?: string
-  // joined via query
   dogs?: Dog
 }
 
@@ -100,18 +99,21 @@ export interface AppContextValue {
   settings: AppSettings
   loading: boolean
   // Dogs
-  upsertDog: (dog: Partial<Dog> & { name: string }) => Promise<Dog | null>
+  saveDog: (dog: Partial<Dog> & { name: string }) => Promise<Dog | null>
   deleteDog: (id: string) => Promise<void>
   // Appointments
-  upsertAppointment: (apt: Partial<Appointment>) => Promise<Appointment | null>
+  saveAppointment: (apt: Partial<Appointment>) => Promise<Appointment | null>
   deleteAppointment: (id: string) => Promise<void>
   completeAppointment: (id: string) => Promise<void>
-  markFlag: (id: string, flag: 'reminder_sent' | 'confirmation_sent' | 'review_requested') => Promise<void>
+  markFlag: (
+    id: string,
+    flag: 'reminder_sent' | 'confirmation_sent' | 'review_requested'
+  ) => Promise<void>
   // Business expenses
-  upsertBusinessExpense: (exp: Partial<BusinessExpense>) => Promise<void>
+  saveBusinessExpense: (exp: Partial<BusinessExpense>) => Promise<void>
   deleteBusinessExpense: (id: string) => Promise<void>
   // Home expenses
-  upsertHomeExpense: (exp: Partial<HomeExpense>) => Promise<void>
+  saveHomeExpense: (exp: Partial<HomeExpense>) => Promise<void>
   deleteHomeExpense: (id: string) => Promise<void>
   // Settings
   saveSettings: (s: AppSettings) => Promise<void>

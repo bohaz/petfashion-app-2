@@ -23,24 +23,45 @@ export default function PerrosPage() {
     return list.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
   }, [dogs, query])
 
+  const SizeColors: Record<string, string> = {
+    XS: 'rgba(201,146,42,0.12)',
+    S:  'rgba(56,189,248,0.1)',
+    M:  'rgba(74,222,128,0.1)',
+    L:  'rgba(251,146,60,0.1)',
+  }
+  const SizeText: Record<string, string> = {
+    XS: '#e8b84b',
+    S:  '#7dd3fc',
+    M:  '#4ade80',
+    L:  '#fb923c',
+  }
+
   return (
-    <div className="px-4 pt-6 pb-4">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-extrabold">
-          Perros <span className="text-stone-400 font-medium tabular">({dogs.length})</span>
-        </h1>
-        <button onClick={() => setModal({ type: 'dog', data: null })}
-          className="bg-stone-900 text-white p-2.5 rounded-xl hover:bg-stone-800 transition active:scale-95">
-          <Plus size={18} />
-        </button>
-      </div>
+    <div>
+      {/* Header */}
+      <header className="mb-6">
+        <div className="section-label">Directorio</div>
+        <div className="flex items-center justify-between">
+          <h1 className="display">
+            Perros{' '}
+            <em className="font-display text-xl" style={{ color: 'rgba(245,240,232,0.35)', fontStyle: 'normal' }}>
+              ({dogs.length})
+            </em>
+          </h1>
+          <button onClick={() => setModal({ type: 'dog', data: null })}
+                  className="btn-gold px-3 py-2 text-xs flex items-center gap-1.5">
+            <Plus size={14} /> Agregar
+          </button>
+        </div>
+      </header>
 
       {/* Search */}
-      <div className="relative mb-4">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+      <div className="relative mb-5">
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2"
+                style={{ color: 'rgba(245,240,232,0.3)' }} />
         <input value={query} onChange={e => setQuery(e.target.value)}
           placeholder="Buscar por nombre, dueño, raza…"
-          className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-3 py-3 text-sm focus:outline-none focus:border-stone-400" />
+          className="w-full pl-10" />
       </div>
 
       {filtered.length === 0 ? (
@@ -53,22 +74,38 @@ export default function PerrosPage() {
         <div className="space-y-2">
           {filtered.map(d => {
             const visits = appointments.filter(a => a.dog_id === d.id && a.status === 'completada').length
+            const initial = (d.name || '?').slice(0, 1).toUpperCase()
             return (
               <button key={d.id} onClick={() => setModal({ type: 'dogDetail', data: d.id })}
-                className="w-full bg-white border border-stone-200 rounded-2xl p-3.5 text-left hover:border-stone-300 transition active:scale-[0.99]">
+                className="w-full rounded-xl p-3.5 text-left transition-all active:scale-[0.99]"
+                style={{ background: 'var(--pf-bg2)', border: '1px solid var(--pf-border)' }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--pf-gold-border)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--pf-border)')}>
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center font-bold text-lg shrink-0">
-                    {(d.name || '?').slice(0, 1).toUpperCase()}
+                  {/* Avatar */}
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center font-display text-lg font-bold shrink-0"
+                       style={{ background: 'rgba(201,146,42,0.12)', color: 'var(--pf-gold-l)' }}>
+                    {initial}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-bold truncate">{d.name}</p>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 shrink-0">{d.size}</span>
+                      <p className="font-semibold text-sm text-white truncate">{d.name}</p>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                            style={{ background: SizeColors[d.size] || 'rgba(201,146,42,0.1)', color: SizeText[d.size] || 'var(--pf-gold-l)' }}>
+                        {d.size}
+                      </span>
                     </div>
-                    <p className="text-xs text-stone-600 truncate">{d.breed || 'Sin raza'} · {d.weight || '?'} kg</p>
-                    <div className="flex items-center gap-3 mt-1 text-[11px] text-stone-500">
+                    <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>
+                      {d.breed || 'Sin raza'} · {d.weight || '?'} kg
+                      {d.coat === 'doble' ? ' · doble capa' : ''}
+                    </p>
+                    <div className="flex items-center gap-3 mt-1 text-xs" style={{ color: 'rgba(245,240,232,0.35)' }}>
                       {d.owner_name && <span className="truncate">{d.owner_name}</span>}
-                      {visits > 0 && <span className="tabular shrink-0">{visits} visita{visits > 1 ? 's' : ''}</span>}
+                      {visits > 0 && (
+                        <span className="tabular shrink-0" style={{ color: 'var(--pf-gold)' }}>
+                          {visits} visita{visits > 1 ? 's' : ''}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

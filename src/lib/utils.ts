@@ -110,15 +110,15 @@ export const gcalLink = (
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${fmt(s)}/${fmt(e)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`
 }
 
-// ── Status badge ──────────────────────────────────────────────
+// ── Status badge — dark-theme compatible ──────────────────────
 
 export const statusBadge = (status: string) => {
   const m: Record<string, { c: string; l: string }> = {
-    pendiente:  { c: 'bg-stone-100 text-stone-700',     l: 'Pendiente' },
-    confirmada: { c: 'bg-sky-100 text-sky-700',         l: 'Confirmada' },
-    completada: { c: 'bg-emerald-100 text-emerald-700', l: 'Completada' },
-    cancelada:  { c: 'bg-red-100 text-red-700',         l: 'Cancelada' },
-    no_show:    { c: 'bg-amber-100 text-amber-800',     l: 'No asistió' },
+    pendiente:  { c: 'badge badge-pending',   l: 'Pendiente' },
+    confirmada: { c: 'badge badge-confirmed', l: 'Confirmada' },
+    completada: { c: 'badge badge-completed', l: 'Completada' },
+    cancelada:  { c: 'badge badge-cancelled', l: 'Cancelada' },
+    no_show:    { c: 'badge badge-noshow',    l: 'No asistió' },
   }
   return m[status] ?? m.pendiente
 }

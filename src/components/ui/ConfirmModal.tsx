@@ -12,17 +12,20 @@ interface ConfirmModalProps {
 export function ConfirmModal({ title, message, confirmLabel, danger, onConfirm, onClose }: ConfirmModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-enter">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl p-5 max-w-sm w-full shadow-2xl">
-        <h3 className="text-lg font-extrabold mb-2">{title}</h3>
-        <p className="text-sm text-stone-600 mb-5">{message}</p>
-        <div className="flex gap-2">
-          <button onClick={onClose}
-            className="flex-1 bg-stone-100 py-3 rounded-xl font-semibold text-sm hover:bg-stone-200 transition">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative max-w-sm w-full rounded-2xl p-6 shadow-2xl"
+           style={{ background: 'var(--pf-bg2)', border: '1px solid var(--pf-border)' }}>
+        <div className="section-label mb-2">{danger ? 'Acción irreversible' : 'Confirmar'}</div>
+        <h3 className="font-display text-xl text-white mb-2">{title}</h3>
+        <p className="text-sm mb-6" style={{ color: 'rgba(245,240,232,0.45)' }}>{message}</p>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 btn-ghost">
             Cancelar
           </button>
-          <button onClick={() => { onConfirm(); onClose() }}
-            className={`flex-1 py-3 rounded-xl font-bold text-sm text-white transition ${danger ? 'bg-red-600 hover:bg-red-700' : 'bg-stone-900 hover:bg-stone-800'}`}>
+          <button
+            onClick={() => { onConfirm(); onClose() }}
+            className="flex-1 btn-gold"
+            style={danger ? { background: 'rgba(239,68,68,0.9)', color: 'white' } : {}}>
             {confirmLabel || 'Confirmar'}
           </button>
         </div>

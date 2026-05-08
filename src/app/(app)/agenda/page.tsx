@@ -23,21 +23,29 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="px-4 pt-6 pb-4">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-extrabold">Agenda</h1>
-        <button
-          onClick={() => setModal({ type: 'appointment', data: { start_time: cursor.toISOString() } as never })}
-          className="bg-stone-900 text-white p-2.5 rounded-xl hover:bg-stone-800 transition active:scale-95">
-          <Plus size={18} />
-        </button>
-      </div>
+    <div>
+      {/* Header */}
+      <header className="mb-6">
+        <div className="section-label">Calendario</div>
+        <div className="flex items-center justify-between">
+          <h1 className="display">Agenda</h1>
+          <button
+            onClick={() => setModal({ type: 'appointment', data: { start_time: cursor.toISOString() } as never })}
+            className="btn-gold px-3 py-2 text-xs flex items-center gap-1.5">
+            <Plus size={14} /> Nueva cita
+          </button>
+        </div>
+      </header>
 
       {/* Mode toggle */}
-      <div className="flex items-center gap-1 bg-white border border-stone-200 rounded-xl p-1 mb-4 w-fit">
+      <div className="flex items-center gap-1 p-1 rounded-xl mb-4 w-fit"
+           style={{ background: 'var(--pf-bg2)', border: '1px solid var(--pf-border)' }}>
         {(['day', 'month'] as const).map(m => (
           <button key={m} onClick={() => setMode(m)}
-            className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition ${mode === m ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-50'}`}>
+            className="px-4 py-1.5 text-xs font-semibold rounded-lg transition-all"
+            style={mode === m
+              ? { background: 'var(--pf-gold)', color: 'var(--pf-bg)' }
+              : { color: 'rgba(245,240,232,0.45)' }}>
             {m === 'day' ? 'Día' : 'Mes'}
           </button>
         ))}
@@ -45,23 +53,33 @@ export default function AgendaPage() {
 
       {mode === 'day' ? (
         <>
-          {/* Day header */}
-          <div className="flex items-center justify-between mb-4 bg-white border border-stone-200 rounded-2xl p-3">
-            <button onClick={() => dayMove(-1)} className="p-2 -m-2 rounded-lg hover:bg-stone-100"><ChevronLeft size={20} /></button>
+          {/* Day nav */}
+          <div className="flex items-center justify-between mb-4 rounded-xl p-3"
+               style={{ background: 'var(--pf-bg2)', border: '1px solid var(--pf-border)' }}>
+            <button onClick={() => dayMove(-1)}
+                    className="p-2 -m-2 rounded-lg transition-colors hover:bg-white/5"
+                    style={{ color: 'rgba(245,240,232,0.5)' }}>
+              <ChevronLeft size={18} />
+            </button>
             <div className="text-center">
-              <p className="text-sm font-bold capitalize">{fmtDateLong(cursor.toISOString())}</p>
+              <p className="text-sm font-semibold text-white capitalize">{fmtDateLong(cursor.toISOString())}</p>
               {!sameDay(cursor, new Date()) && (
-                <button onClick={() => setCursor(startOfDay(new Date()))} className="text-xs text-emerald-700 font-semibold mt-0.5">
+                <button onClick={() => setCursor(startOfDay(new Date()))}
+                        className="text-xs mt-0.5 font-semibold" style={{ color: 'var(--pf-gold)' }}>
                   Ir a hoy
                 </button>
               )}
             </div>
-            <button onClick={() => dayMove(1)} className="p-2 -m-2 rounded-lg hover:bg-stone-100"><ChevronRight size={20} /></button>
+            <button onClick={() => dayMove(1)}
+                    className="p-2 -m-2 rounded-lg transition-colors hover:bg-white/5"
+                    style={{ color: 'rgba(245,240,232,0.5)' }}>
+              <ChevronRight size={18} />
+            </button>
           </div>
 
           {dayApts.length === 0 ? (
             <EmptyState
-              icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
+              icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>}
               text="Sin citas este día"
               subtext="Toca + para crear una"
             />
@@ -86,7 +104,7 @@ export default function AgendaPage() {
   )
 }
 
-// ── Month Calendar ────────────────────────────────────────────
+// ── Month Calendar ──────────────────────────────────────────────────────────
 
 function MonthCalendar({
   cursor, setCursor, appointments, onSelectDate
@@ -116,17 +134,28 @@ function MonthCalendar({
   const monthMove = (n: number) => setCursor(new Date(year, month + n, 1))
 
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-3">
-      <div className="flex items-center justify-between mb-3 px-1">
-        <button onClick={() => monthMove(-1)} className="p-2 -m-2 rounded-lg hover:bg-stone-100"><ChevronLeft size={18} /></button>
-        <p className="text-sm font-bold capitalize">{fmtMonth(cursor)}</p>
-        <button onClick={() => monthMove(1)} className="p-2 -m-2 rounded-lg hover:bg-stone-100"><ChevronRight size={18} /></button>
+    <div className="rounded-xl p-4" style={{ background: 'var(--pf-bg2)', border: '1px solid var(--pf-border)' }}>
+      <div className="flex items-center justify-between mb-4 px-1">
+        <button onClick={() => monthMove(-1)}
+                className="p-2 -m-2 rounded-lg transition-colors hover:bg-white/5"
+                style={{ color: 'rgba(245,240,232,0.5)' }}>
+          <ChevronLeft size={17} />
+        </button>
+        <p className="text-sm font-bold text-white capitalize">{fmtMonth(cursor)}</p>
+        <button onClick={() => monthMove(1)}
+                className="p-2 -m-2 rounded-lg transition-colors hover:bg-white/5"
+                style={{ color: 'rgba(245,240,232,0.5)' }}>
+          <ChevronRight size={17} />
+        </button>
       </div>
+
       <div className="grid grid-cols-7 gap-1 mb-1">
         {['D','L','M','M','J','V','S'].map((d, i) => (
-          <div key={i} className="text-center text-[10px] font-bold text-stone-400 uppercase py-1">{d}</div>
+          <div key={i} className="text-center text-[10px] font-bold uppercase py-1"
+               style={{ color: 'rgba(245,240,232,0.25)' }}>{d}</div>
         ))}
       </div>
+
       <div className="grid grid-cols-7 gap-1">
         {Array.from({ length: startWeekday }).map((_, i) => <div key={`b${i}`} />)}
         {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -135,16 +164,28 @@ function MonthCalendar({
           const count = aptsByDay[day] || 0
           const isToday = sameDay(date, today)
           const isSelected = sameDay(date, cursor)
+
           return (
             <button key={day} onClick={() => onSelectDate(date)}
-              className={`aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition ${
-                isSelected ? 'bg-stone-900 text-white' :
-                isToday ? 'bg-emerald-50 text-emerald-700 font-bold ring-1 ring-emerald-200' :
-                'text-stone-700 hover:bg-stone-50'
-              }`}>
-              <span className="tabular font-semibold">{day}</span>
+              className="aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all"
+              style={{
+                background: isSelected
+                  ? 'var(--pf-gold)'
+                  : isToday
+                    ? 'rgba(201,146,42,0.1)'
+                    : 'transparent',
+                color: isSelected
+                  ? 'var(--pf-bg)'
+                  : isToday
+                    ? 'var(--pf-gold-l)'
+                    : 'rgba(245,240,232,0.7)',
+                border: isToday && !isSelected ? '1px solid var(--pf-gold-border)' : '1px solid transparent',
+                fontWeight: isSelected || isToday ? 700 : 400,
+              }}>
+              <span className="tabular text-xs">{day}</span>
               {count > 0 && (
-                <span className={`text-[9px] mt-0.5 ${isSelected ? 'text-white/80' : 'text-emerald-600'}`}>
+                <span className="text-[8px] mt-0.5"
+                      style={{ color: isSelected ? 'rgba(15,14,12,0.6)' : 'var(--pf-gold)' }}>
                   {'•'.repeat(Math.min(count, 3))}
                 </span>
               )}
