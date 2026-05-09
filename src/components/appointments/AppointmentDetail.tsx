@@ -2,9 +2,13 @@
 
 import { useApp } from '@/components/AppProvider'
 import { ModalShell, ActionButton } from '@/components/ui'
-import { SERVICES } from '@/lib/constants'
-import { fmtDateLong, fmtDateShort, fmtTime, fmtCLP, statusBadge, cleanPhone, fillTemplate, waLink, gcalLink } from '@/lib/utils'
+import { SERVICES, SERVICE_INCLUDES } from '@/lib/constants'
+import {
+  fmtDateLong, fmtTime, fmtCLP, statusBadge,
+  cleanPhone, fillTemplate, waLink, gcalLink, sameDay
+} from '@/lib/utils'
 import { Edit2, Trash2, Check, MessageCircle, Bell, Star, Calendar, Phone, AlertCircle } from 'lucide-react'
+import type { Appointment } from '@/lib/types'
 
 interface Props { aptId: string; onClose: () => void }
 
@@ -18,40 +22,162 @@ export function AppointmentDetail({ aptId, onClose }: Props) {
     </ModalShell>
   )
 
-  const dog = dogs.find(d => d.id === apt.dog_id)
-  const sb = statusBadge(apt.status)
-  const phone = apt.phone || dog?.phone || ''
+  const dog      = dogs.find(d => d.id === apt.dog_id)
+  const sb       = statusBadge(apt.status)
+  const phone    = apt.phone || dog?.phone || ''
+  const ownerName = apt.owner_name || dog?.owner_name || 'amig@'
 
-  const vars = {
-    dueño:    apt.owner_name || dog?.owner_name || 'amig@',
-    perro:    apt.client_name || dog?.name || 'tu mascota',
-    fecha:    fmtDateLong(apt.start_time),
-    hora:     fmtTime(apt.start_time),
-    servicio: SERVICES[apt.service]?.label + (apt.qty > 1 ? ` × ${apt.qty}` : ''),
-    precio:   fmtCLP(apt.price),
-    link_reseña: settings.business.googleReviewLink,
+  // ── Helpers ─────────────────────────────────────────────────────────────
+
+  const getPhone = (a: Appointment) =>
+    a.phone || dogs.find(d => d.id === a.dog_id)?.phone || ''
+
+  /** Returns unsent sibling appointments (same phone, same day / criteria) */
+  const getSiblings = (tplKey: 'confirmation' | 'reminder' | 'review'): Appointment[] => {
+    if (!phone) return [apt]
+
+    let filtered: Appointment[]
+
+    if (tplKey === 'confirmation') {
+      filtered = appointments.filter(a =>
+        getPhone(a) === phone &&
+        sameDay(a.start_time, apt.start_time) &&
+        !['cancelada', 'completada'].includes(a.status) &&
+        !a.confirmation_sent
+      )
+    } else if (tplKey === 'reminder') {
+      filtered = appointments.filter(a =>
+        getPhone(a) === phone &&
+        sameDay(a.start_time, apt.start_time) &&
+        a.status !== 'cancelada' &&
+        !a.reminder_sent
+      )
+    } else {
+      // review: all completed & unrequested in last 2 days
+      filtered = appointments.filter(a =>
+        getPhone(a) === phone &&
+        a.status === 'completada' &&
+        !a.review_requested &&
+        a.completed_at != null &&
+        (Date.now() - new Date(a.completed_at).getTime()) < 1000 * 60 * 60 * 24 * 2
+      )
+    }
+
+    return filtered.sort((a, b) =>
+      new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+    )
   }
+
+  // ── Message builders ─────────────────────────────────────────────────────
+
+  /** Builds the detail block for one appointment (used in both single and grouped) */
+  const aptBlock = (a: Appointment): string => {
+    const aDog   = dogs.find(d => d.id === a.dog_id)
+    const name   = a.client_name || aDog?.name || 'Cliente'
+    const svcLabel = SERVICES[a.service]?.label + (a.qty > 1 ? ` × ${a.qty}` : '')
+    const items  = (SERVICE_INCLUDES[a.service] || []).map(i => `• ${i}`).join('\n')
+    return `🐶 ${name} — ${svcLabel}\n📅 ${fmtDateLong(a.start_time)} · ⏰ ${fmtTime(a.start_time)}\n${items}\n💵 ${fmtCLP(a.price)}`
+  }
+
+  const buildConfirmation = (apts: Appointment[]): string => {
+    const blocks = apts.map(aptBlock).join('\n\n')
+    const footer = `\n\n📍 ${settings.business.address}\nCualquier cambio nos avisas. ¡Gracias!`
+
+    if (apts.length === 1) {
+      const petName = apts[0].client_name || dogs.find(d => d.id === apts[0].dog_id)?.name || 'tu mascota'
+      return `¡Hola ${ownerName}! 🐾 Confirmamos la hora en Pet Fashion para ${petName}:\n\n${blocks}${footer}`
+    }
+
+    const total = apts.reduce((s, a) => s + (a.price || 0), 0)
+    return `¡Hola ${ownerName}! 🐾 Confirmamos las horas en Pet Fashion:\n\n${blocks}\n\n💰 Total: ${fmtCLP(total)}${footer}`
+  }
+
+  const buildReminder = (apts: Appointment[]): string => {
+    if (apts.length === 1) {
+      const vars = {
+        dueño:    ownerName,
+        perro:    apts[0].client_name || dog?.name || 'tu mascota',
+        fecha:    fmtDateLong(apts[0].start_time),
+        hora:     fmtTime(apts[0].start_time),
+        servicio: SERVICES[apts[0].service]?.label + (apts[0].qty > 1 ? ` × ${apts[0].qty}` : ''),
+      }
+      return fillTemplate(settings.templates.reminder, vars)
+    }
+
+    let msg = `¡Hola ${ownerName}! 🐾 Te recordamos que mañana tienes citas en Pet Fashion:\n\n`
+    apts.forEach(a => {
+      const aDog = dogs.find(d => d.id === a.dog_id)
+      const name = a.client_name || aDog?.name || 'Cliente'
+      msg += `🐶 ${name} — ${SERVICES[a.service]?.label || a.service} · ⏰ ${fmtTime(a.start_time)}\n`
+    })
+    return msg + '\n¿Confirmas tu asistencia?'
+  }
+
+  const buildReview = (apts: Appointment[]): string => {
+    if (apts.length === 1) {
+      const vars = {
+        dueño:      ownerName,
+        perro:      apts[0].client_name || dog?.name || 'tu mascota',
+        link_reseña: settings.business.googleReviewLink,
+      }
+      return fillTemplate(settings.templates.review, vars)
+    }
+
+    const names = apts.map(a => {
+      const aDog = dogs.find(d => d.id === a.dog_id)
+      return a.client_name || aDog?.name || 'tu mascota'
+    })
+    const nameStr = names.length === 2
+      ? names.join(' y ')
+      : names.slice(0, -1).join(', ') + ' y ' + names[names.length - 1]
+
+    return (
+      `¡Hola ${ownerName}! 🐾 Esperamos que ${nameStr} hayan quedado felices con sus servicios.\n\n` +
+      `Si tienes un momento, nos ayudaría mucho dejarnos una reseña en Google: ${settings.business.googleReviewLink}\n\n` +
+      `¡Mil gracias!`
+    )
+  }
+
+  // ── Send ─────────────────────────────────────────────────────────────────
+
+  const flagMap = {
+    confirmation: 'confirmation_sent',
+    reminder:     'reminder_sent',
+    review:       'review_requested',
+  } as const
 
   const openWa = (tplKey: 'confirmation' | 'reminder' | 'review') => {
-    const url = waLink(phone, fillTemplate(settings.templates[tplKey], vars))
-    window.open(url, '_blank')
-    const flagMap = { confirmation: 'confirmation_sent', reminder: 'reminder_sent', review: 'review_requested' } as const
-    markFlag(apt.id, flagMap[tplKey])
+    const siblings = getSiblings(tplKey)
+    // If current apt was already sent (resend case), siblings won't contain it — send solo
+    const toSend = siblings.some(a => a.id === apt.id) ? siblings : [apt]
+
+    let message: string
+    if (tplKey === 'confirmation') message = buildConfirmation(toSend)
+    else if (tplKey === 'reminder') message = buildReminder(toSend)
+    else                            message = buildReview(toSend)
+
+    window.open(waLink(phone, message), '_blank')
+    toSend.forEach(a => markFlag(a.id, flagMap[tplKey]))
   }
 
+  // ── Calendar ─────────────────────────────────────────────────────────────
+
   const handleAddCalendar = () => {
-    const title = `${apt.client_name || dog?.name || 'Cliente'} – ${SERVICES[apt.service]?.label}`
+    const title   = `${apt.client_name || dog?.name || 'Cliente'} – ${SERVICES[apt.service]?.label}`
     const details = [
       apt.owner_name && `Dueño: ${apt.owner_name}`,
-      phone && `Tel: ${phone}`,
+      phone         && `Tel: ${phone}`,
       `Servicio: ${SERVICES[apt.service]?.label}`,
-      apt.price && `Precio: ${fmtCLP(apt.price)}`,
-      apt.notes && `Notas: ${apt.notes}`,
+      apt.price     && `Precio: ${fmtCLP(apt.price)}`,
+      apt.notes     && `Notas: ${apt.notes}`,
     ].filter(Boolean).join('\n')
     window.open(gcalLink(apt.start_time, apt.end_time, title, details, settings.business.address), '_blank')
   }
 
-  const handleEdit = () => { onClose(); setTimeout(() => setModal({ type: 'appointment', data: apt }), 50) }
+  const handleEdit = () => {
+    onClose()
+    setTimeout(() => setModal({ type: 'appointment', data: apt }), 50)
+  }
 
   const handleDelete = () => {
     setModal({
@@ -67,6 +193,8 @@ export function AppointmentDetail({ aptId, onClose }: Props) {
   }
 
   const isActive = apt.status !== 'completada' && apt.status !== 'cancelada'
+
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <ModalShell title="Detalle de cita" onClose={onClose}>
@@ -124,7 +252,7 @@ export function AppointmentDetail({ aptId, onClose }: Props) {
           )}
         </div>
 
-        {/* Complete button */}
+        {/* Complete */}
         {isActive && (
           <button onClick={() => completeAppointment(apt.id)}
             className="w-full btn-gold py-3.5 flex items-center justify-center gap-2">
@@ -136,9 +264,10 @@ export function AppointmentDetail({ aptId, onClose }: Props) {
         {phone ? (
           <div className="space-y-2">
             <p className="section-label" style={{ marginBottom: '6px' }}>Mensajes WhatsApp</p>
+
             {isActive && !apt.confirmation_sent && (
               <ActionButton color="green" icon={<MessageCircle size={17} />}
-                label="Enviar confirmación" desc="Confirma fecha, hora y precio"
+                label="Enviar confirmación" desc="Con detalle del servicio y precio"
                 onClick={() => openWa('confirmation')} />
             )}
             {isActive && apt.confirmation_sent && (
@@ -185,7 +314,7 @@ export function AppointmentDetail({ aptId, onClose }: Props) {
             <Edit2 size={13} /> Editar
           </button>
           <button onClick={handleDelete}
-            className="flex-1 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-1.5 transition-all"
+            className="flex-1 py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-1.5"
             style={{ background: 'rgba(239,68,68,0.08)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>
             <Trash2 size={13} /> Eliminar
           </button>
