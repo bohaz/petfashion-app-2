@@ -90,12 +90,29 @@ export const calcDuration = (
 
 // ── WhatsApp / Calendar ───────────────────────────────────────
 
-export const fillTemplate = (tpl: string, vars: Record<string, string>): string =>
-  tpl.replace(/\{(\w+)\}/g, (_, k) => vars[k] !== undefined ? vars[k] : `{${k}}`)
+export const fillTemplate = (
+  tpl: string,
+  vars: Record<string, string>
+): string =>
+  tpl.replace(/\{([^}]+)\}/g, (_, k) => {
+    const key = String(k).trim()
+    return vars[key] !== undefined ? vars[key] : `{${key}}`
+  })
 
 export const waLink = (phone: string, message: string): string => {
   const p = cleanPhone(phone)
-  return `https://wa.me/${p}?text=${encodeURIComponent(message)}`
+
+  const text = encodeURIComponent(message.normalize('NFC'))
+
+  const isMobile =
+    typeof navigator !== 'undefined' &&
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
+  if (isMobile) {
+    return `https://wa.me/${p}?text=${text}`
+  }
+
+  return `https://web.whatsapp.com/send?phone=${p}&text=${text}`
 }
 
 export const gcalLink = (
@@ -105,9 +122,17 @@ export const gcalLink = (
   details: string,
   location: string,
 ): string => {
-  const fmt = (d: Date) => d.toISOString().replace(/[-:.]/g,'').slice(0,15) + 'Z'
-  const s = new Date(start), e = new Date(end)
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${fmt(s)}/${fmt(e)}&details=${encodeURIComponent(details)}&location=${encodeURIComponent(location)}`
+  const fmt = (d: Date) =>
+    d.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z'
+
+  const s = new Date(start)
+  const e = new Date(end)
+
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+    title.normalize('NFC')
+  )}&dates=${fmt(s)}/${fmt(e)}&details=${encodeURIComponent(
+    details.normalize('NFC')
+  )}&location=${encodeURIComponent(location.normalize('NFC'))}`
 }
 
 // ── Status badge — dark-theme compatible ──────────────────────
