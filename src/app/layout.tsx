@@ -15,27 +15,21 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'Pet Fashion · Gestión',
+  title: 'Pet Fashion Gestión',
   description: 'Sistema de gestión Pet Fashion Dog Salon',
-
-  manifest: '/site.webmanifest',
-
-  applicationName: 'Pet Fashion',
-
+  applicationName: 'Pet Fashion Gestión',
   icons: {
     icon: [
       { url: '/favicon.ico' },
-      { url: '/favicon.svg', type: 'image/svg+xml' },
       { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
-
     apple: '/apple-touch-icon.png',
   },
-
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Pet Fashion',
+    title: 'Pet Fashion Gestión',
   },
 }
 

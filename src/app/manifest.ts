@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Pet Fashion',
-    short_name: 'PetFashion',
+    name: 'Pet Fashion Gestión',
+    short_name: 'PF Gestión',
     description: 'Gestión interna de citas, perritos y finanzas de Pet Fashion.',
     start_url: '/hoy',
     scope: '/',
@@ -16,14 +16,16 @@ export default function manifest(): MetadataRoute.Manifest {
         src: '/icon-192.png',
         sizes: '192x192',
         type: 'image/png',
+        purpose: 'any',
       },
       {
         src: '/icon-512.png',
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
       },
       {
-        src: '/icon-512.png',
+        src: '/icon-maskable-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
