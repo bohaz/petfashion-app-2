@@ -17,7 +17,26 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: 'Pet Fashion · Gestión',
   description: 'Sistema de gestión Pet Fashion Dog Salon',
-  manifest: '/manifest.json',
+
+  manifest: '/site.webmanifest',
+
+  applicationName: 'Pet Fashion',
+
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+    ],
+
+    apple: '/apple-touch-icon.png',
+  },
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Pet Fashion',
+  },
 }
 
 export const viewport: Viewport = {
@@ -26,10 +45,19 @@ export const viewport: Viewport = {
   themeColor: '#0f0e0c',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="es" className={`${jost.variable} ${playfair.variable}`}>
-      <body style={{ background: 'var(--pf-bg)', color: 'var(--pf-cream)' }}>
+      <body
+        style={{
+          background: 'var(--pf-bg)',
+          color: 'var(--pf-cream)',
+        }}
+      >
         {children}
       </body>
     </html>
