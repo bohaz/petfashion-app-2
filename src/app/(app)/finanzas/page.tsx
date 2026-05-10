@@ -106,6 +106,20 @@ function TabBar({ tabs, active, onSelect, accent = 'gold' }: {
   )
 }
 
+// ── Helper: parse date avoiding UTC timezone shift ──────────────────────────
+// new Date('2024-04-01') se interpreta como UTC 00:00, que en Chile
+// (UTC-4) resulta en el 31 de marzo. Extraemos año/mes directamente.
+function parseDateSafe(iso: string): { year: number; month: number } {
+  if (iso.length === 10) {
+    return {
+      year:  parseInt(iso.slice(0, 4), 10),
+      month: parseInt(iso.slice(5, 7), 10) - 1,
+    }
+  }
+  const d = new Date(iso)
+  return { year: d.getFullYear(), month: d.getMonth() }
+}
+
 // ── NEGOCIO ─────────────────────────────────────────────────────────────────
 
 function NegocioModule({ monthCursor, monthMove, tab, setTab }: {
@@ -114,8 +128,8 @@ function NegocioModule({ monthCursor, monthMove, tab, setTab }: {
   const { appointments, businessExpenses, dogs, setModal } = useApp()
 
   const inMonth = (iso: string) => {
-    const d = new Date(iso)
-    return d.getFullYear() === monthCursor.getFullYear() && d.getMonth() === monthCursor.getMonth()
+    const { year, month } = parseDateSafe(iso)
+    return year === monthCursor.getFullYear() && month === monthCursor.getMonth()
   }
 
   const monthIncomes = useMemo(() =>
@@ -188,8 +202,8 @@ function HogarModule({ monthCursor, monthMove, tab, setTab }: {
   const { homeExpenses, setModal } = useApp()
 
   const inMonth = (iso: string) => {
-    const d = new Date(iso)
-    return d.getFullYear() === monthCursor.getFullYear() && d.getMonth() === monthCursor.getMonth()
+    const { year, month } = parseDateSafe(iso)
+    return year === monthCursor.getFullYear() && month === monthCursor.getMonth()
   }
 
   const monthExpenses = useMemo(() =>
@@ -413,8 +427,9 @@ function NegocioReportes({ appointments, expenses, dogs }: {
     if (monthly[key] !== undefined) monthly[key].in += a.price || 0
   })
   expenses.forEach(e => {
-    const d = new Date(e.date)
-    const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`
+    // Use parseDateSafe to avoid timezone issues in the reports chart
+    const { year, month } = parseDateSafe(e.date)
+    const key = `${year}-${String(month).padStart(2,'0')}`
     if (monthly[key] !== undefined) monthly[key].out += e.amount || 0
   })
 

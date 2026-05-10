@@ -39,7 +39,6 @@ export function AppointmentModal({ appointment, onClose }: Props) {
   )
   const [size, setSize] = useState<DogSize>('S')
   const [coat, setCoat] = useState<DogCoat>('corto')
-  const [qty, setQty] = useState(appointment?.qty || 1)
   const [customPrice, setCustomPrice] = useState<number | null>(
     appointment?.id ? appointment.price ?? null : null
   )
@@ -62,7 +61,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
     if (dog.coat) setCoat(dog.coat)
   }, [dogId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const suggestedPrice = calcPrice(settings, service, size, coat, qty)
+  const suggestedPrice = calcPrice(settings, service, size, coat, 1)
   const displayPrice = customPrice !== null ? customPrice : suggestedPrice
   const duration = calcDuration(settings, service, size)
   const endStr = addMinutes(fromLocalInput(startStr), duration)
@@ -89,7 +88,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
       owner_name: ownerName.trim() || undefined,
       phone: phone.trim() || dog?.phone || undefined,
       service,
-      qty,
+      qty: 1,
       price: displayPrice,
       price_override: customPrice !== null,
       start_time: fromLocalInput(startStr),
@@ -195,7 +194,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
           </select>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block mb-1.5">Talla</label>
             <select
@@ -221,19 +220,6 @@ export function AppointmentModal({ appointment, onClose }: Props) {
               <option value="corto">Corto</option>
               <option value="doble">Doble capa</option>
             </select>
-          </div>
-
-          <div>
-            <label className="block mb-1.5">Cant.</label>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={10}
-              value={qty}
-              onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-full"
-            />
           </div>
         </div>
 
