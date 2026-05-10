@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Menu, X, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { DogIcon } from '@/components/ui/DogIcon'
 
 const NAV_ITEMS = [
   {
@@ -33,16 +34,7 @@ const NAV_ITEMS = [
   {
     href: '/perros',
     label: 'Perros',
-    icon: (active: boolean) => (
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth={active ? 2.3 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"/>
-        <path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.96-1.45-2.344-2.5"/>
-        <path d="M8 14v.5A3.5 3.5 0 0 0 11.5 18h1a3.5 3.5 0 0 0 3.5-3.5V14a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2z"/>
-        <path d="M6.5 17.5c-.875 1.563-1.5 2.5-2 3"/>
-        <path d="M17.5 17.5c.875 1.563 1.5 2.5 2 3"/>
-      </svg>
-    ),
+    icon: (active: boolean) => <DogIcon size={17} />,
   },
   {
     href: '/finanzas',
@@ -67,16 +59,6 @@ const NAV_ITEMS = [
     ),
   },
 ]
-
-const DogLogo = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pf-gold)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"/>
-    <path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.96-1.45-2.344-2.5"/>
-    <path d="M8 14v.5A3.5 3.5 0 0 0 11.5 18h1a3.5 3.5 0 0 0 3.5-3.5V14a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2z"/>
-    <path d="M6.5 17.5c-.875 1.563-1.5 2.5-2 3"/>
-    <path d="M17.5 17.5c.875 1.563 1.5 2.5 2 3"/>
-  </svg>
-)
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -104,8 +86,8 @@ export function Sidebar() {
              style={{ borderBottom: '1px solid var(--pf-border)' }}>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                 style={{ background: 'rgba(201,146,42,0.1)', border: '1px solid var(--pf-gold-border)' }}>
-              <DogLogo />
+                 style={{ background: 'rgba(201,146,42,0.1)', border: '1px solid var(--pf-gold-border)', color: 'var(--pf-gold)' }}>
+              <DogIcon size={18} />
             </div>
             <div>
               <p className="font-display text-base text-white leading-tight">
@@ -159,8 +141,8 @@ export function Sidebar() {
       {/* Mobile topbar */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
               style={{ background: 'var(--pf-bg2)', borderBottom: '1px solid var(--pf-border)' }}>
-        <div className="flex items-center gap-2">
-          <DogLogo />
+        <div className="flex items-center gap-2" style={{ color: 'var(--pf-gold)' }}>
+          <DogIcon size={18} />
           <p className="font-display text-base text-white">
             Pet <em className="italic" style={{ color: 'var(--pf-gold-l)' }}>Fashion</em>
           </p>

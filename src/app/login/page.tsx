@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
+import { DogIcon } from '@/components/ui/DogIcon'
 
 export default function LoginPage() {
   const supabase = createClient()
@@ -41,15 +42,12 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
-               style={{ background: 'rgba(201,146,42,0.1)', border: '1px solid var(--pf-gold-border)' }}>
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-                 stroke="var(--pf-gold)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"/>
-              <path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.96-1.45-2.344-2.5"/>
-              <path d="M8 14v.5A3.5 3.5 0 0 0 11.5 18h1a3.5 3.5 0 0 0 3.5-3.5V14a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2z"/>
-              <path d="M6.5 17.5c-.875 1.563-1.5 2.5-2 3"/>
-              <path d="M17.5 17.5c.875 1.563 1.5 2.5 2 3"/>
-            </svg>
+               style={{
+                 background: 'rgba(201,146,42,0.1)',
+                 border: '1px solid var(--pf-gold-border)',
+                 color: 'var(--pf-gold)',
+               }}>
+            <DogIcon size={28} />
           </div>
           <h1 className="font-display text-3xl text-white">
             Pet <em className="italic" style={{ color: 'var(--pf-gold-l)' }}>Fashion</em>

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useApp } from '@/components/AppProvider'
 import { EmptyState } from '@/components/ui'
+import { DogIcon } from '@/components/ui/DogIcon'
 import { Plus, Search } from 'lucide-react'
 
 export default function PerrosPage() {
@@ -66,7 +67,7 @@ export default function PerrosPage() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon={<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"/><path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.96-1.45-2.344-2.5"/><path d="M8 14v.5A3.5 3.5 0 0 0 11.5 18h1a3.5 3.5 0 0 0 3.5-3.5V14a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2z"/><path d="M6.5 17.5c-.875 1.563-1.5 2.5-2 3"/><path d="M17.5 17.5c.875 1.563 1.5 2.5 2 3"/></svg>}
+          icon={<DogIcon size={32} />}
           text={query ? 'Sin resultados' : 'Aún no tienes perros'}
           subtext={query ? 'Intenta con otro nombre' : 'Toca + para agregar el primero'}
         />
