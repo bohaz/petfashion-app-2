@@ -3,18 +3,26 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { DEFAULT_SETTINGS } from '@/lib/constants'
-import { calcPrice, calcDuration, sizeFromWeight, addMinutes, fromLocalInput } from '@/lib/utils'
+import { mergeSettings } from '@/lib/settings'
 import type {
-  AppContextValue, AppSettings, Dog, Appointment,
-  BusinessExpense, HomeExpense, ModalState,
+  AppContextValue,
+  AppSettings,
+  Dog,
+  Appointment,
+  BusinessExpense,
+  HomeExpense,
+  ModalState,
 } from '@/lib/types'
 
 // ── Context ───────────────────────────────────────────────────
 
-const AppContext = createContext<AppContextValue & {
-  modal: ModalState
-  setModal: (m: ModalState) => void
-} | null>(null)
+const AppContext = createContext<
+  | (AppContextValue & {
+      modal: ModalState
+      setModal: (m: ModalState) => void
+    })
+  | null
+>(null)
 
 export function useApp() {
   const ctx = useContext(AppContext)
@@ -24,7 +32,10 @@ export function useApp() {
 
 // ── Toast ─────────────────────────────────────────────────────
 
-export interface ToastState { msg: string; type: 'success' | 'error' }
+export interface ToastState {
+  msg: string
+  type: 'success' | 'error'
+}
 
 // ── Provider ──────────────────────────────────────────────────
 
@@ -70,16 +81,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setBusinessExpenses(bizData || [])
       setHomeExpenses(homeData || [])
 
-      if (settingsData) {
-        const s = settingsData as Record<string, unknown>
-        setSettingsState({
-          ...DEFAULT_SETTINGS,
-          prices:    { ...DEFAULT_SETTINGS.prices,    ...(s.prices    as object || {}) },
-          durations: { ...DEFAULT_SETTINGS.durations, ...(s.durations as object || {}) },
-          templates: { ...DEFAULT_SETTINGS.templates, ...(s.templates as object || {}) },
-          business:  { ...DEFAULT_SETTINGS.business,  ...(s.business  as object || {}) },
-        })
-      }
+      if (settingsData) setSettingsState(mergeSettings(settingsData))
       setLoading(false)
     }
     load()
@@ -95,165 +97,297 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (data) setDogs(data)
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, async () => {
-        const { data } = await supabase.from('appointments').select('*, dogs(*)').order('start_time')
+        const { data } = await supabase
+          .from('appointments')
+          .select('*, dogs(*)')
+          .order('start_time')
         if (data) setAppointments(data as Appointment[])
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'business_expenses' }, async () => {
-        const { data } = await supabase.from('business_expenses').select('*').order('date', { ascending: false })
-        if (data) setBusinessExpenses(data)
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'home_expenses' }, async () => {
-        const { data } = await supabase.from('home_expenses').select('*').order('date', { ascending: false })
-        if (data) setHomeExpenses(data)
-      })
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'business_expenses' },
+        async () => {
+          const { data } = await supabase
+            .from('business_expenses')
+            .select('*')
+            .order('date', { ascending: false })
+          if (data) setBusinessExpenses(data)
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'home_expenses' },
+        async () => {
+          const { data } = await supabase
+            .from('home_expenses')
+            .select('*')
+            .order('date', { ascending: false })
+          if (data) setHomeExpenses(data)
+        },
+      )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, async () => {
         const { data } = await supabase.from('settings').select('*').eq('id', 1).single()
-        if (data) {
-          const s = data as Record<string, unknown>
-          setSettingsState({
-            ...DEFAULT_SETTINGS,
-            prices:    { ...DEFAULT_SETTINGS.prices,    ...(s.prices    as object || {}) },
-            durations: { ...DEFAULT_SETTINGS.durations, ...(s.durations as object || {}) },
-            templates: { ...DEFAULT_SETTINGS.templates, ...(s.templates as object || {}) },
-            business:  { ...DEFAULT_SETTINGS.business,  ...(s.business  as object || {}) },
-          })
-        }
+        if (data) setSettingsState(mergeSettings(data))
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Dogs CRUD ─────────────────────────────────────────────
 
-  const upsertDog = useCallback(async (dog: Partial<Dog> & { name: string }): Promise<Dog | null> => {
-    const { id, ...rest } = dog
-    if (id) {
-      const { data, error } = await supabase.from('dogs').update(rest).eq('id', id).select().single()
-      if (error) { showToast('Error al guardar', 'error'); return null }
-      showToast('Perro actualizado')
-      return data as Dog
-    } else {
-      const { data, error } = await supabase.from('dogs').insert({ ...rest, visit_count: 0 }).select().single()
-      if (error) { showToast('Error al guardar', 'error'); return null }
-      showToast('Perro agregado')
-      return data as Dog
-    }
-  }, [supabase, showToast])
+  const upsertDog = useCallback(
+    async (dog: Partial<Dog> & { name: string }): Promise<Dog | null> => {
+      const { id, ...rest } = dog
+      if (id) {
+        const { data, error } = await supabase
+          .from('dogs')
+          .update(rest)
+          .eq('id', id)
+          .select()
+          .single()
+        if (error) {
+          showToast('Error al guardar', 'error')
+          return null
+        }
+        showToast('Perro actualizado')
+        return data as Dog
+      } else {
+        const { data, error } = await supabase
+          .from('dogs')
+          .insert({ ...rest, visit_count: 0 })
+          .select()
+          .single()
+        if (error) {
+          showToast('Error al guardar', 'error')
+          return null
+        }
+        showToast('Perro agregado')
+        return data as Dog
+      }
+    },
+    [supabase, showToast],
+  )
 
-  const deleteDog = useCallback(async (id: string) => {
-    await supabase.from('appointments').update({ dog_id: null }).eq('dog_id', id)
-    const { error } = await supabase.from('dogs').delete().eq('id', id)
-    if (error) { showToast('Error al eliminar', 'error'); return }
-    showToast('Perro eliminado')
-  }, [supabase, showToast])
+  const deleteDog = useCallback(
+    async (id: string) => {
+      // appointments.dog_id is "on delete set null", so past appointments keep
+      // their data and just lose the link to the dog.
+      const { error } = await supabase.from('dogs').delete().eq('id', id)
+      if (error) {
+        showToast('Error al eliminar', 'error')
+        return
+      }
+      showToast('Perro eliminado')
+    },
+    [supabase, showToast],
+  )
 
   // ── Appointments CRUD ─────────────────────────────────────
 
-  const upsertAppointment = useCallback(async (apt: Partial<Appointment>): Promise<Appointment | null> => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id, dogs: _dogs, ...rest } = apt as Appointment & { dogs?: unknown }
-    if (id) {
-      const { data, error } = await supabase.from('appointments').update(rest).eq('id', id).select('*, dogs(*)').single()
-      if (error) { showToast('Error al guardar', 'error'); return null }
-      showToast('Cita actualizada')
-      return data as Appointment
-    } else {
-      const { data: { user } } = await supabase.auth.getUser()
-      const { data, error } = await supabase.from('appointments').insert({
-        ...rest,
-        status: rest.status || 'pendiente',
-        reminder_sent: false,
-        confirmation_sent: false,
-        review_requested: false,
-        created_by: user?.id,
-      }).select('*, dogs(*)').single()
-      if (error) { showToast('Error al guardar', 'error'); return null }
-      showToast('Cita creada')
-      return data as Appointment
-    }
-  }, [supabase, showToast])
+  const upsertAppointment = useCallback(
+    async (apt: Partial<Appointment>): Promise<Appointment | null> => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, dogs: _dogs, ...rest } = apt as Appointment & { dogs?: unknown }
+      if (id) {
+        const { data, error } = await supabase
+          .from('appointments')
+          .update(rest)
+          .eq('id', id)
+          .select('*, dogs(*)')
+          .single()
+        if (error) {
+          showToast('Error al guardar', 'error')
+          return null
+        }
+        showToast('Cita actualizada')
+        return data as Appointment
+      } else {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        const { data, error } = await supabase
+          .from('appointments')
+          .insert({
+            ...rest,
+            status: rest.status || 'pendiente',
+            reminder_sent: false,
+            confirmation_sent: false,
+            review_requested: false,
+            created_by: user?.id,
+          })
+          .select('*, dogs(*)')
+          .single()
+        if (error) {
+          showToast('Error al guardar', 'error')
+          return null
+        }
+        showToast('Cita creada')
+        return data as Appointment
+      }
+    },
+    [supabase, showToast],
+  )
 
-  const deleteAppointment = useCallback(async (id: string) => {
-    const { error } = await supabase.from('appointments').delete().eq('id', id)
-    if (error) { showToast('Error al eliminar', 'error'); return }
-    showToast('Cita eliminada')
-  }, [supabase, showToast])
+  const deleteAppointment = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from('appointments').delete().eq('id', id)
+      if (error) {
+        showToast('Error al eliminar', 'error')
+        return
+      }
+      showToast('Cita eliminada')
+    },
+    [supabase, showToast],
+  )
 
-  const completeAppointment = useCallback(async (id: string) => {
-    const apt = appointments.find(a => a.id === id)
-    if (!apt) return
-    await supabase.from('appointments').update({ status: 'completada', completed_at: new Date().toISOString() }).eq('id', id)
-    if (apt.dog_id) {
-      const dog = dogs.find(d => d.id === apt.dog_id)
-      await supabase.from('dogs').update({
-        last_visit: apt.start_time,
-        visit_count: (dog?.visit_count || 0) + 1,
-      }).eq('id', apt.dog_id)
-    }
-    showToast('Cita completada · Ingreso registrado')
-  }, [supabase, appointments, dogs, showToast])
+  const completeAppointment = useCallback(
+    async (id: string) => {
+      const apt = appointments.find((a) => a.id === id)
+      if (!apt) return
+      const { error } = await supabase
+        .from('appointments')
+        .update({ status: 'completada', completed_at: new Date().toISOString() })
+        .eq('id', id)
+      if (error) {
+        showToast('Error al completar la cita', 'error')
+        return
+      }
+      if (apt.dog_id) {
+        const dog = dogs.find((d) => d.id === apt.dog_id)
+        const { error: dogError } = await supabase
+          .from('dogs')
+          .update({
+            last_visit: apt.start_time,
+            visit_count: (dog?.visit_count || 0) + 1,
+          })
+          .eq('id', apt.dog_id)
+        if (dogError) {
+          // The income is already recorded; only the dog's visit history failed.
+          showToast('Cita completada, pero no se actualizó la ficha del perro', 'error')
+          return
+        }
+      }
+      showToast('Cita completada · Ingreso registrado')
+    },
+    [supabase, appointments, dogs, showToast],
+  )
 
-  const markFlag = useCallback(async (id: string, flag: 'reminder_sent' | 'confirmation_sent' | 'review_requested') => {
-    await supabase.from('appointments').update({ [flag]: true }).eq('id', id)
-  }, [supabase])
+  const markFlag = useCallback(
+    async (id: string, flag: 'reminder_sent' | 'confirmation_sent' | 'review_requested') => {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ [flag]: true })
+        .eq('id', id)
+      if (error) showToast('No se pudo marcar el mensaje como enviado', 'error')
+    },
+    [supabase, showToast],
+  )
 
   // ── Business Expenses CRUD ────────────────────────────────
 
-  const upsertBusinessExpense = useCallback(async (exp: Partial<BusinessExpense>) => {
-    const { id, ...rest } = exp
-    if (id) {
-      const { error } = await supabase.from('business_expenses').update(rest).eq('id', id)
-      if (error) { showToast('Error al guardar', 'error'); return }
-      showToast('Egreso actualizado')
-    } else {
-      const { data: { user } } = await supabase.auth.getUser()
-      const { error } = await supabase.from('business_expenses').insert({ ...rest, created_by: user?.id })
-      if (error) { showToast('Error al guardar', 'error'); return }
-      showToast('Egreso registrado')
-    }
-  }, [supabase, showToast])
+  const upsertBusinessExpense = useCallback(
+    async (exp: Partial<BusinessExpense>) => {
+      const { id, ...rest } = exp
+      if (id) {
+        const { error } = await supabase.from('business_expenses').update(rest).eq('id', id)
+        if (error) {
+          showToast('Error al guardar', 'error')
+          return
+        }
+        showToast('Egreso actualizado')
+      } else {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        const { error } = await supabase
+          .from('business_expenses')
+          .insert({ ...rest, created_by: user?.id })
+        if (error) {
+          showToast('Error al guardar', 'error')
+          return
+        }
+        showToast('Egreso registrado')
+      }
+    },
+    [supabase, showToast],
+  )
 
-  const deleteBusinessExpense = useCallback(async (id: string) => {
-    await supabase.from('business_expenses').delete().eq('id', id)
-    showToast('Egreso eliminado')
-  }, [supabase, showToast])
+  const deleteBusinessExpense = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from('business_expenses').delete().eq('id', id)
+      if (error) {
+        showToast('Error al eliminar', 'error')
+        return
+      }
+      showToast('Egreso eliminado')
+    },
+    [supabase, showToast],
+  )
 
   // ── Home Expenses CRUD ────────────────────────────────────
 
-  const upsertHomeExpense = useCallback(async (exp: Partial<HomeExpense>) => {
-    const { id, ...rest } = exp
-    if (id) {
-      const { error } = await supabase.from('home_expenses').update(rest).eq('id', id)
-      if (error) { showToast('Error al guardar', 'error'); return }
-      showToast('Gasto actualizado')
-    } else {
-      const { data: { user } } = await supabase.auth.getUser()
-      const { error } = await supabase.from('home_expenses').insert({ ...rest, created_by: user?.id })
-      if (error) { showToast('Error al guardar', 'error'); return }
-      showToast('Gasto registrado')
-    }
-  }, [supabase, showToast])
+  const upsertHomeExpense = useCallback(
+    async (exp: Partial<HomeExpense>) => {
+      const { id, ...rest } = exp
+      if (id) {
+        const { error } = await supabase.from('home_expenses').update(rest).eq('id', id)
+        if (error) {
+          showToast('Error al guardar', 'error')
+          return
+        }
+        showToast('Gasto actualizado')
+      } else {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        const { error } = await supabase
+          .from('home_expenses')
+          .insert({ ...rest, created_by: user?.id })
+        if (error) {
+          showToast('Error al guardar', 'error')
+          return
+        }
+        showToast('Gasto registrado')
+      }
+    },
+    [supabase, showToast],
+  )
 
-  const deleteHomeExpense = useCallback(async (id: string) => {
-    await supabase.from('home_expenses').delete().eq('id', id)
-    showToast('Gasto eliminado')
-  }, [supabase, showToast])
+  const deleteHomeExpense = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from('home_expenses').delete().eq('id', id)
+      if (error) {
+        showToast('Error al eliminar', 'error')
+        return
+      }
+      showToast('Gasto eliminado')
+    },
+    [supabase, showToast],
+  )
 
   // ── Settings ──────────────────────────────────────────────
 
-  const saveSettings = useCallback(async (s: AppSettings) => {
-    const { error } = await supabase.from('settings').upsert({
-      id: 1,
-      prices: s.prices,
-      durations: s.durations,
-      templates: s.templates,
-      business: s.business,
-      updated_at: new Date().toISOString(),
-    })
-    if (error) { showToast('Error al guardar', 'error'); return }
-    showToast('Configuración guardada')
-  }, [supabase, showToast])
+  const saveSettings = useCallback(
+    async (s: AppSettings) => {
+      const { error } = await supabase.from('settings').upsert({
+        id: 1,
+        prices: s.prices,
+        durations: s.durations,
+        templates: s.templates,
+        business: s.business,
+        updated_at: new Date().toISOString(),
+      })
+      if (error) {
+        showToast('Error al guardar', 'error')
+        return
+      }
+      showToast('Configuración guardada')
+    },
+    [supabase, showToast],
+  )
 
   // ── Value ─────────────────────────────────────────────────
 
@@ -289,10 +423,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={value}>
       {children}
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
-          <div className={`px-4 py-2.5 rounded-full text-sm font-medium shadow-lg whitespace-nowrap ${
-            toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-stone-900 text-white'
-          }`}>
+        <div
+          role={toast.type === 'error' ? 'alert' : 'status'}
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+        >
+          <div
+            className={`px-4 py-2.5 rounded-full text-sm font-medium shadow-lg whitespace-nowrap ${
+              toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-stone-900 text-white'
+            }`}
+          >
             {toast.msg}
           </div>
         </div>
@@ -300,6 +439,3 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     </AppContext.Provider>
   )
 }
-
-// Re-export helpers so pages can import from one place
-export { calcPrice, calcDuration, sizeFromWeight, addMinutes, fromLocalInput }

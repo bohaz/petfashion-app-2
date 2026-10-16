@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useApp } from '@/components/AppProvider'
+import { toDateKey } from '@/lib/utils'
 import { ModalShell } from '@/components/ui'
 import { HOME_CATEGORIES } from '@/lib/constants'
 import type { HomeExpense } from '@/lib/types'
@@ -17,33 +18,20 @@ export function HomeExpenseModal({ expense, onClose }: Props) {
   const isEdit = !!expense?.id
   const [saving, setSaving] = useState(false)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = toDateKey(new Date())
 
-  const [category, setCategory] = useState(
-    expense?.category || Object.keys(HOME_CATEGORIES)[0]
-  )
+  const [category, setCategory] = useState(expense?.category || Object.keys(HOME_CATEGORIES)[0])
 
-  const [amount, setAmount] = useState(
-    String(expense?.amount || '')
-  )
+  const [amount, setAmount] = useState(String(expense?.amount || ''))
 
-  const [date, setDate] = useState(
-    expense?.date ? expense.date.slice(0, 10) : today
-  )
+  const [date, setDate] = useState(expense?.date ? expense.date.slice(0, 10) : today)
 
-  const [description, setDescription] = useState(
-    expense?.description || ''
-  )
+  const [description, setDescription] = useState(expense?.description || '')
 
   const handleSave = async () => {
     const parsedAmount = parseFloat(amount)
 
-    if (
-      !date ||
-      !amount ||
-      Number.isNaN(parsedAmount) ||
-      parsedAmount <= 0
-    ) {
+    if (!date || !amount || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
       return
     }
 
@@ -110,11 +98,7 @@ export function HomeExpenseModal({ expense, onClose }: Props) {
               color: 'white',
             }}
           >
-            {saving
-              ? 'Guardando…'
-              : isEdit
-                ? 'Guardar cambios'
-                : 'Registrar gasto'}
+            {saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Registrar gasto'}
           </button>
         </div>
       }
@@ -139,10 +123,7 @@ export function HomeExpenseModal({ expense, onClose }: Props) {
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
 
-          <p
-            className="text-xs font-medium"
-            style={{ color: '#a5b4fc' }}
-          >
+          <p className="text-xs font-medium" style={{ color: '#a5b4fc' }}>
             Gasto del hogar — no afecta las finanzas del negocio
           </p>
         </div>
@@ -150,11 +131,7 @@ export function HomeExpenseModal({ expense, onClose }: Props) {
         <div>
           <label className="block mb-1.5">Categoría</label>
 
-          <select
-            value={category}
-            onChange={e => setCategory(e.target.value)}
-            className="w-full"
-          >
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full">
             {Object.entries(HOME_CATEGORIES).map(([key, value]) => (
               <option key={key} value={key}>
                 {(value as { label: string }).label}
@@ -180,7 +157,7 @@ export function HomeExpenseModal({ expense, onClose }: Props) {
                 inputMode="numeric"
                 min={0}
                 value={amount}
-                onChange={e => setAmount(e.target.value)}
+                onChange={(e) => setAmount(e.target.value)}
                 placeholder="0"
                 className="w-full pl-8"
               />
@@ -193,21 +170,19 @@ export function HomeExpenseModal({ expense, onClose }: Props) {
             <input
               type="date"
               value={date}
-              onChange={e => setDate(e.target.value)}
+              onChange={(e) => setDate(e.target.value)}
               className="w-full"
             />
           </div>
         </div>
 
         <div>
-          <label className="block mb-1.5">
-            Descripción (opcional)
-          </label>
+          <label className="block mb-1.5">Descripción (opcional)</label>
 
           <input
             type="text"
             value={description}
-            onChange={e => setDescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
             placeholder="¿En qué se gastó?"
             className="w-full"
           />

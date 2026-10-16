@@ -35,23 +35,21 @@ export function AppointmentModal({ appointment, onClose }: Props) {
   const [ownerName, setOwnerName] = useState(appointment?.owner_name || '')
   const [phone, setPhone] = useState(appointment?.phone || '')
   const [service, setService] = useState<ServiceKey>(
-    (appointment?.service as ServiceKey) || 'corte_bano'
+    (appointment?.service as ServiceKey) || 'corte_bano',
   )
   const [size, setSize] = useState<DogSize>('S')
   const [coat, setCoat] = useState<DogCoat>('corto')
   const [customPrice, setCustomPrice] = useState<number | null>(
-    appointment?.id ? appointment.price ?? null : null
+    appointment?.id ? (appointment.price ?? null) : null,
   )
   const [startStr, setStartStr] = useState(defaultStart)
   const [notes, setNotes] = useState(appointment?.notes || '')
-  const [status, setStatus] = useState<Appointment['status']>(
-    appointment?.status || 'pendiente'
-  )
+  const [status, setStatus] = useState<Appointment['status']>(appointment?.status || 'pendiente')
 
   useEffect(() => {
     if (!dogId) return
 
-    const dog = dogs.find(d => d.id === dogId)
+    const dog = dogs.find((d) => d.id === dogId)
     if (!dog) return
 
     if (!clientName) setClientName(dog.name || '')
@@ -79,7 +77,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
 
     setSaving(true)
 
-    const dog = dogs.find(d => d.id === dogId)
+    const dog = dogs.find((d) => d.id === dogId)
 
     const data: Partial<Appointment> = {
       ...(appointment || {}),
@@ -104,7 +102,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
     onClose()
   }
 
-  const selectedDog = dogs.find(d => d.id === dogId)
+  const selectedDog = dogs.find((d) => d.id === dogId)
 
   return (
     <ModalShell
@@ -123,13 +121,9 @@ export function AppointmentModal({ appointment, onClose }: Props) {
       <div className="flex flex-col gap-4">
         <div>
           <label className="block mb-1.5">Perro registrado (opcional)</label>
-          <select
-            value={dogId}
-            onChange={e => setDogId(e.target.value)}
-            className="w-full"
-          >
+          <select value={dogId} onChange={(e) => setDogId(e.target.value)} className="w-full">
             <option value="">— Nuevo cliente —</option>
-            {dogs.map(d => (
+            {dogs.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name} {d.owner_name ? `(${d.owner_name})` : ''}
               </option>
@@ -137,10 +131,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
           </select>
 
           {selectedDog?.breed && (
-            <p
-              className="text-xs mt-1 tabular"
-              style={{ color: 'rgba(245,240,232,0.35)' }}
-            >
+            <p className="text-xs mt-1 tabular" style={{ color: 'rgba(245,240,232,0.35)' }}>
               {selectedDog.breed} · {selectedDog.weight} kg · {selectedDog.size}
             </p>
           )}
@@ -151,7 +142,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
             <label className="block mb-1.5">Nombre del perro *</label>
             <input
               value={clientName}
-              onChange={e => setClientName(e.target.value)}
+              onChange={(e) => setClientName(e.target.value)}
               placeholder="Max"
               className="w-full"
             />
@@ -161,7 +152,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
             <label className="block mb-1.5">Dueño/a</label>
             <input
               value={ownerName}
-              onChange={e => setOwnerName(e.target.value)}
+              onChange={(e) => setOwnerName(e.target.value)}
               placeholder="Nombre"
               className="w-full"
             />
@@ -173,7 +164,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
           <input
             type="tel"
             value={phone}
-            onChange={e => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value)}
             placeholder="+569..."
             className="w-full"
           />
@@ -183,7 +174,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
           <label className="block mb-1.5">Servicio</label>
           <select
             value={service}
-            onChange={e => setService(e.target.value as ServiceKey)}
+            onChange={(e) => setService(e.target.value as ServiceKey)}
             className="w-full"
           >
             {SVC_OPTIONS.map(([k, v]) => (
@@ -199,10 +190,10 @@ export function AppointmentModal({ appointment, onClose }: Props) {
             <label className="block mb-1.5">Talla</label>
             <select
               value={size}
-              onChange={e => setSize(e.target.value as DogSize)}
+              onChange={(e) => setSize(e.target.value as DogSize)}
               className="w-full"
             >
-              {(['XS', 'S', 'M', 'L'] as DogSize[]).map(s => (
+              {(['XS', 'S', 'M', 'L'] as DogSize[]).map((s) => (
                 <option key={s} value={s}>
                   {s}
                 </option>
@@ -214,7 +205,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
             <label className="block mb-1.5">Manto</label>
             <select
               value={coat}
-              onChange={e => setCoat(e.target.value as DogCoat)}
+              onChange={(e) => setCoat(e.target.value as DogCoat)}
               className="w-full"
             >
               <option value="corto">Corto</option>
@@ -228,14 +219,11 @@ export function AppointmentModal({ appointment, onClose }: Props) {
           <input
             type="datetime-local"
             value={startStr}
-            onChange={e => setStartStr(e.target.value)}
+            onChange={(e) => setStartStr(e.target.value)}
             className="w-full"
           />
 
-          <p
-            className="text-xs mt-1 tabular"
-            style={{ color: 'rgba(245,240,232,0.35)' }}
-          >
+          <p className="text-xs mt-1 tabular" style={{ color: 'rgba(245,240,232,0.35)' }}>
             Duración estimada: {duration} min hasta{' '}
             {new Date(endStr).toLocaleTimeString('es-CL', {
               hour: '2-digit',
@@ -260,7 +248,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
                 type="number"
                 inputMode="numeric"
                 value={displayPrice}
-                onChange={e => setCustomPrice(parseInt(e.target.value) || 0)}
+                onChange={(e) => setCustomPrice(parseInt(e.target.value) || 0)}
                 className="w-full pl-8"
               />
             </div>
@@ -277,10 +265,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
           </div>
 
           {customPrice === null && (
-            <p
-              className="text-xs mt-1"
-              style={{ color: 'rgba(245,240,232,0.3)' }}
-            >
+            <p className="text-xs mt-1" style={{ color: 'rgba(245,240,232,0.3)' }}>
               Precio sugerido según tarifa
             </p>
           )}
@@ -291,10 +276,10 @@ export function AppointmentModal({ appointment, onClose }: Props) {
             <label className="block mb-1.5">Estado</label>
             <select
               value={status}
-              onChange={e => setStatus(e.target.value as Appointment['status'])}
+              onChange={(e) => setStatus(e.target.value as Appointment['status'])}
               className="w-full"
             >
-              {STATUS_OPTIONS.map(o => (
+              {STATUS_OPTIONS.map((o) => (
                 <option key={o.v} value={o.v}>
                   {o.l}
                 </option>
@@ -307,7 +292,7 @@ export function AppointmentModal({ appointment, onClose }: Props) {
           <label className="block mb-1.5">Notas internas</label>
           <textarea
             value={notes}
-            onChange={e => setNotes(e.target.value)}
+            onChange={(e) => setNotes(e.target.value)}
             placeholder="Instrucciones especiales, observaciones…"
             rows={3}
             className="w-full resize-none"

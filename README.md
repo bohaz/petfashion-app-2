@@ -1,129 +1,104 @@
-# Pet Fashion · Sistema de Gestión
+# Pet Fashion Gestión
 
-App de gestión para Pet Fashion Dog Salon — citas, perros, finanzas del negocio y del hogar.
+[![CI](https://github.com/bohaz/petfashion-app-2/actions/workflows/ci.yml/badge.svg)](https://github.com/bohaz/petfashion-app-2/actions/workflows/ci.yml)
 
----
+The app we use to run [Pet Fashion Dog Salon](https://petfashiondogsalon.cl), a dog grooming salon in Isla Negra, Chile: appointments, the dog directory and the finances of the business. Two people use it at the same time from their phones, so changes sync in real time.
 
-## Stack
+It is private (login required) and the interface is in Spanish. The screenshots use sample data.
 
-- **Frontend:** Next.js 15, TypeScript, Tailwind CSS
-- **Backend:** Supabase (PostgreSQL + Realtime + Auth)
-- **Deploy:** Vercel (gratis)
+<p>
+  <img src="docs/screenshots/today.webp" alt="Today view with the day's appointments" width="260" />
+  <img src="docs/screenshots/finances.webp" alt="Monthly finances with income by service" width="260" />
+</p>
 
----
+## Features
 
-## Instalación paso a paso
+- **Today:** the day's appointments, expected and collected income, and pending reminders and review requests.
+- **Agenda:** day and month calendar.
+- **Dogs:** directory with size, coat, owner, notes and visit history.
+- **Pricing rules:** price and duration are worked out from the service and the dog's size and coat, and can be overridden per appointment.
+- **WhatsApp messages:** confirmation, reminder and review request from editable templates, opened in WhatsApp (app on phones, WhatsApp Web on desktop). Also adds appointments to Google Calendar.
+- **Finances:** monthly balance, income by service, expenses by category, six-month chart, top clients. Household expenses are tracked separately from the business.
+- **Real time:** Supabase Realtime pushes every change to the other user without reloading.
+- **Installable PWA** on iOS and Android.
 
-### 1. Crea el proyecto en Supabase
+## Tech stack
 
-1. Ve a [supabase.com](https://supabase.com) → **New project**
-2. Pon el nombre `petfashion`, elige una contraseña fuerte para la DB, región `South America (São Paulo)` o similar
-3. Espera que se cree (1–2 min)
+Next.js 15 (App Router) · React 19 · TypeScript (strict) · Tailwind CSS 3 · Supabase (Postgres, Auth, Realtime, row-level security) · Vitest · ESLint · Prettier · GitHub Actions · Vercel
 
-### 2. Crea las tablas
-
-1. En tu proyecto Supabase → **SQL Editor**
-2. Pega todo el contenido de `supabase/schema.sql`
-3. Click **Run** — debe decir "Success"
-
-### 3. Crea las cuentas de usuario
-
-1. En Supabase → **Authentication → Users**
-2. Click **Invite user** o **Add user** manualmente:
-   - `elizabethdemartinezf@gmail.com`
-   - `ricardomartinezvet@gmail.com`
-3. Cada uno recibirá un email para crear su contraseña
-   - Si no llega, puedes hacer clic en los 3 puntos del usuario → **Send magic link** o establecer contraseña manualmente
-
-> **Opcional:** Para que SOLO estas dos cuentas puedan usar la app, ve a Authentication → Settings y **desactiva** "Enable email confirmations" y **desactiva** "Allow new users to sign up" (cambia a false). Así nadie más puede registrarse.
-
-### 4. Obtén las credenciales
-
-En Supabase → **Settings → API**:
-- `Project URL` → cópiala
-- `anon / public key` → cópiala
-
-### 5. Configura variables de entorno
-
-Crea un archivo `.env.local` en la raíz del proyecto:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=TU_ANON_KEY
-```
-
-### 6. Instala y ejecuta localmente
-
-```bash
-npm install
-npm run dev
-```
-
-Abre [http://localhost:3000](http://localhost:3000)
-
----
-
-## Deploy en Vercel
-
-1. Sube el proyecto a GitHub (repositorio privado)
-2. Ve a [vercel.com](https://vercel.com) → **New Project** → importa el repo
-3. En **Environment Variables** agrega:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Click **Deploy**
-
----
-
-## Instalar como app en el celular (PWA)
-
-**iPhone (iOS 16.4+):**
-1. Abre la URL de tu app en Safari
-2. Toca el ícono de compartir
-3. "Agregar a pantalla de inicio"
-4. Ya funciona como app nativa
-
-**Android:**
-1. Abre la URL en Chrome
-2. Toca el menú (3 puntos) → "Agregar a pantalla de inicio" o "Instalar app"
-
----
-
-## Migrar datos desde la app anterior
-
-1. En la app antigua, ve a **Más → Exportar a CSV**
-2. Guarda el archivo
-3. Los datos se pueden importar manualmente o escribirnos para hacer el import automatizado
-
----
-
-## Realtime — cómo funciona
-
-Cuando un usuario crea, edita o elimina cualquier registro, el otro usuario ve el cambio **inmediatamente** sin recargar la página. Esto funciona gracias a Supabase Realtime (WebSockets). Solo necesitan estar conectados a internet.
-
----
-
-## Estructura del proyecto
+## Architecture
 
 ```
 src/
 ├── app/
-│   ├── login/          Login
-│   └── (app)/
-│       ├── hoy/        Vista de hoy + acciones rápidas
-│       ├── agenda/     Calendario día/mes
-│       ├── perros/     Directorio de perros
-│       ├── finanzas/   Negocio (ingresos/egresos) + Hogar (gastos)
-│       └── mas/        Precios, mensajes WhatsApp, configuración
+│   ├── login/              Email and password sign-in
+│   └── (app)/              Signed-in area: hoy, agenda, perros, finanzas, mas
 ├── components/
-│   ├── AppProvider.tsx Contexto global + Realtime
-│   ├── appointments/
-│   ├── dogs/
-│   ├── finances/
-│   ├── layout/
-│   └── ui/
-└── lib/
-    ├── supabase/       Clientes browser + server
-    ├── types.ts
-    ├── utils.ts
-    └── constants.ts
+│   ├── AppProvider.tsx     Data context: initial load, Realtime, CRUD, toasts
+│   ├── appointments/       Appointment card, form and detail (WhatsApp actions)
+│   ├── dogs/               Dog form and detail
+│   ├── finances/           Business and home modules, reports, expense forms
+│   ├── layout/             Sidebar, bottom nav, modal manager
+│   └── ui/                 Shared UI pieces
+├── lib/
+│   ├── finance.ts          Month filters, totals, grouping and reports
+│   ├── utils.ts            Dates, CLP format, pricing rules, links, templates
+│   ├── settings.ts         Merges stored settings with the defaults
+│   ├── constants.ts        Services, sizes, categories, default prices
+│   ├── types.ts            Domain model
+│   └── supabase/           Browser and server clients
+└── middleware.ts           Redirects to /login without a session
+supabase/schema.sql         Tables, Realtime, row-level security, indexes
 ```
+
+- **Calculations are pure functions in `lib/`**, separate from React, so they are tested without a browser or a database.
+- **One data layer.** `AppProvider` loads everything once, subscribes to Realtime and exposes typed actions. Components never call Supabase directly; the only exceptions are sign-in and sign-out.
+- **Dates are local.** Expense dates are Postgres `date` values (`YYYY-MM-DD`). They are parsed as local dates, because `new Date('2026-10-01')` is UTC midnight, which in Chile is still 30 September.
+- **Access is enforced in the database.** Row-level security only lets authenticated users read or write; the middleware just redirects.
+
+## Getting started
+
+Requires Node.js 20 or later (see `.nvmrc`) and a Supabase project.
+
+1. **Database.** In the Supabase SQL Editor, run `supabase/schema.sql`.
+2. **Users.** In _Authentication → Users_, add the people who will use the app.
+3. **Close sign-ups (required).** In _Authentication → Sign In / Providers_, turn off _Allow new users to sign up_. The policies give every signed-in user full access, so with sign-ups open, anyone could create an account with the public anon key and read the client data.
+4. **Environment.** Copy `.env.example` to `.env.local` and fill in the project URL and anon key from _Settings → API_.
+5. **Run it:**
+
+```bash
+npm install
+npm run dev        # http://localhost:3000
+```
+
+To deploy on Vercel, import the repo and add the same two environment variables.
+
+| Script                        | What it does                                               |
+| ----------------------------- | ---------------------------------------------------------- |
+| `npm run dev`                 | Development server                                         |
+| `npm run build` / `npm start` | Production build and server                                |
+| `npm test`                    | Runs the test suite once (`test:watch` to keep it running) |
+| `npm run lint`                | ESLint with the Next.js rules                              |
+| `npm run typecheck`           | TypeScript without emitting files                          |
+| `npm run format`              | Formats the code with Prettier                             |
+| `npm run check`               | Lint, types, format check, tests and build (same as CI)    |
+
+## Testing
+
+```bash
+npm test
+```
+
+45 tests cover the logic in `lib/`, running in the `America/Santiago` time zone:
+
+- Dates: date-only values, month boundaries and local time across the UTC offset.
+- Business rules: size from weight, price by service, size and coat, durations.
+- Formatting and links: CLP amounts (including negatives), message templates, WhatsApp and Google Calendar links.
+- Settings merge with defaults.
+- Finance: monthly income and expenses, grouping, top service and clients, six-month summary and average.
+
+CI runs lint, type check, format check, tests and build on every pull request.
+
+## Author
+
+Ricardo Martínez · [Portfolio](https://ricardomartinez.vercel.app/) · [GitHub](https://github.com/bohaz)

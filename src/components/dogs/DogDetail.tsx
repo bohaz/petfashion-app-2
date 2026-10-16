@@ -27,7 +27,7 @@ const SizeBg: Record<string, string> = {
 
 export function DogDetail({ dogId, onClose }: Props) {
   const { dogs, appointments, setModal, deleteDog } = useApp()
-  const dog = dogs.find(d => d.id === dogId)
+  const dog = dogs.find((d) => d.id === dogId)
 
   if (!dog) {
     return (
@@ -40,10 +40,10 @@ export function DogDetail({ dogId, onClose }: Props) {
   }
 
   const dogApts = appointments
-    .filter(a => a.dog_id === dogId)
+    .filter((a) => a.dog_id === dogId)
     .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
 
-  const completedApts = dogApts.filter(a => a.status === 'completada')
+  const completedApts = dogApts.filter((a) => a.status === 'completada')
   const totalSpent = completedApts.reduce((s, a) => s + (a.price || 0), 0)
 
   const coatLabel = dog.coat === 'doble' ? 'Doble capa' : 'Corto'
@@ -138,7 +138,7 @@ export function DogDetail({ dogId, onClose }: Props) {
               { l: 'Teléfono', v: dog.phone || '—' },
               { l: 'Visitas', v: completedApts.length },
               { l: 'Total gastado', v: fmtCLP(totalSpent) },
-            ].map(item => (
+            ].map((item) => (
               <div key={item.l}>
                 <p className="section-label" style={{ marginBottom: '3px', fontSize: '9px' }}>
                   {item.l}
@@ -214,7 +214,7 @@ export function DogDetail({ dogId, onClose }: Props) {
             <div className="section-label mb-3">Historial</div>
 
             <div className="space-y-2">
-              {dogApts.slice(0, 5).map(a => {
+              {dogApts.slice(0, 5).map((a) => {
                 const sb = statusBadge(a.status)
 
                 return (
@@ -226,10 +226,10 @@ export function DogDetail({ dogId, onClose }: Props) {
                       background: 'var(--pf-bg2)',
                       border: '1px solid var(--pf-border)',
                     }}
-                    onMouseEnter={e => {
+                    onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = 'var(--pf-gold-border)'
                     }}
-                    onMouseLeave={e => {
+                    onMouseLeave={(e) => {
                       e.currentTarget.style.borderColor = 'var(--pf-border)'
                     }}
                   >

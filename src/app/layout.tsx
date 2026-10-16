@@ -39,11 +39,7 @@ export const viewport: Viewport = {
   themeColor: '#0f0e0c',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${jost.variable} ${playfair.variable}`}>
       <body

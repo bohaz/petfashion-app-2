@@ -73,11 +73,7 @@ export function DogModal({ dog, onClose }: Props) {
       title={isEdit ? 'Editar perro' : 'Nuevo perro'}
       onClose={onClose}
       footer={
-        <button
-          onClick={handleSave}
-          disabled={saving || !name.trim()}
-          className="btn-gold w-full"
-        >
+        <button onClick={handleSave} disabled={saving || !name.trim()} className="btn-gold w-full">
           {saving ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Agregar perro'}
         </button>
       }
@@ -88,7 +84,7 @@ export function DogModal({ dog, onClose }: Props) {
             <label className="block mb-1.5">Nombre *</label>
             <input
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Max"
               className="w-full"
             />
@@ -98,7 +94,7 @@ export function DogModal({ dog, onClose }: Props) {
             <label className="block mb-1.5">Raza</label>
             <input
               value={breed}
-              onChange={e => setBreed(e.target.value)}
+              onChange={(e) => setBreed(e.target.value)}
               placeholder="Golden retriever"
               className="w-full"
             />
@@ -112,7 +108,7 @@ export function DogModal({ dog, onClose }: Props) {
               type="number"
               inputMode="decimal"
               value={weight}
-              onChange={e => handleWeightChange(e.target.value)}
+              onChange={(e) => handleWeightChange(e.target.value)}
               placeholder="0.0"
               className="w-full"
             />
@@ -126,10 +122,10 @@ export function DogModal({ dog, onClose }: Props) {
             <label className="block mb-1.5">Talla</label>
             <select
               value={size}
-              onChange={e => setSize(e.target.value as DogSize)}
+              onChange={(e) => setSize(e.target.value as DogSize)}
               className="w-full"
             >
-              {SIZE_OPTIONS.map(s => (
+              {SIZE_OPTIONS.map((s) => (
                 <option key={s} value={s}>
                   {SIZE_LABELS[s]}
                 </option>
@@ -142,7 +138,7 @@ export function DogModal({ dog, onClose }: Props) {
           <label className="block mb-1.5">Tipo de manto</label>
 
           <div className="flex gap-2">
-            {COAT_OPTIONS.map(o => (
+            {COAT_OPTIONS.map((o) => (
               <button
                 key={o.value}
                 type="button"
@@ -171,7 +167,7 @@ export function DogModal({ dog, onClose }: Props) {
           <label className="block mb-1.5">Nombre del dueño/a</label>
           <input
             value={ownerName}
-            onChange={e => setOwnerName(e.target.value)}
+            onChange={(e) => setOwnerName(e.target.value)}
             placeholder="María González"
             className="w-full"
           />
@@ -182,7 +178,7 @@ export function DogModal({ dog, onClose }: Props) {
           <input
             type="tel"
             value={phone}
-            onChange={e => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value)}
             placeholder="+56912345678"
             className="w-full"
           />
@@ -192,7 +188,7 @@ export function DogModal({ dog, onClose }: Props) {
           <label className="block mb-1.5">Notas internas</label>
           <textarea
             value={notes}
-            onChange={e => setNotes(e.target.value)}
+            onChange={(e) => setNotes(e.target.value)}
             placeholder="Alergias, comportamiento, instrucciones…"
             rows={3}
             className="w-full resize-none"

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useApp } from '@/components/AppProvider'
+import { toDateKey } from '@/lib/utils'
 import { ModalShell } from '@/components/ui'
 import { BUSINESS_CATEGORIES } from '@/lib/constants'
 import type { BusinessExpense } from '@/lib/types'
@@ -17,15 +18,11 @@ export function BusinessExpenseModal({ expense, onClose }: Props) {
   const isEdit = !!expense?.id
   const [saving, setSaving] = useState(false)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = toDateKey(new Date())
 
-  const [category, setCategory] = useState(
-    expense?.category || Object.keys(BUSINESS_CATEGORIES)[0]
-  )
+  const [category, setCategory] = useState(expense?.category || Object.keys(BUSINESS_CATEGORIES)[0])
   const [amount, setAmount] = useState(String(expense?.amount || ''))
-  const [date, setDate] = useState(
-    expense?.date ? expense.date.slice(0, 10) : today
-  )
+  const [date, setDate] = useState(expense?.date ? expense.date.slice(0, 10) : today)
   const [description, setDescription] = useState(expense?.description || '')
 
   const handleSave = async () => {
@@ -100,11 +97,7 @@ export function BusinessExpenseModal({ expense, onClose }: Props) {
       <div className="flex flex-col gap-4">
         <div>
           <label className="block mb-1.5">Categoría</label>
-          <select
-            value={category}
-            onChange={e => setCategory(e.target.value)}
-            className="w-full"
-          >
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full">
             {Object.entries(BUSINESS_CATEGORIES).map(([key, value]) => (
               <option key={key} value={key}>
                 {(value as { label: string }).label}
@@ -130,7 +123,7 @@ export function BusinessExpenseModal({ expense, onClose }: Props) {
                 inputMode="numeric"
                 min={0}
                 value={amount}
-                onChange={e => setAmount(e.target.value)}
+                onChange={(e) => setAmount(e.target.value)}
                 placeholder="0"
                 className="w-full pl-8"
               />
@@ -142,7 +135,7 @@ export function BusinessExpenseModal({ expense, onClose }: Props) {
             <input
               type="date"
               value={date}
-              onChange={e => setDate(e.target.value)}
+              onChange={(e) => setDate(e.target.value)}
               className="w-full"
             />
           </div>
@@ -153,7 +146,7 @@ export function BusinessExpenseModal({ expense, onClose }: Props) {
           <input
             type="text"
             value={description}
-            onChange={e => setDescription(e.target.value)}
+            onChange={(e) => setDescription(e.target.value)}
             placeholder="Detalle del gasto…"
             className="w-full"
           />
