@@ -17,13 +17,17 @@ export function ModalManager() {
 
   return (
     <>
-      {modal.type === 'appointment'     && <AppointmentModal appointment={modal.data} onClose={close} />}
-      {modal.type === 'aptDetail'       && <AppointmentDetail aptId={modal.data} onClose={close} />}
-      {modal.type === 'dog'             && <DogModal dog={modal.data} onClose={close} />}
-      {modal.type === 'dogDetail'       && <DogDetail dogId={modal.data} onClose={close} />}
-      {modal.type === 'businessExpense' && <BusinessExpenseModal expense={modal.data} onClose={close} />}
-      {modal.type === 'homeExpense'     && <HomeExpenseModal expense={modal.data} onClose={close} />}
-      {modal.type === 'confirm'         && <ConfirmModal {...modal.data} onClose={close} />}
+      {modal.type === 'appointment' && (
+        <AppointmentModal appointment={modal.data} onClose={close} />
+      )}
+      {modal.type === 'aptDetail' && <AppointmentDetail aptId={modal.data} onClose={close} />}
+      {modal.type === 'dog' && <DogModal dog={modal.data} onClose={close} />}
+      {modal.type === 'dogDetail' && <DogDetail dogId={modal.data} onClose={close} />}
+      {modal.type === 'businessExpense' && (
+        <BusinessExpenseModal expense={modal.data} onClose={close} />
+      )}
+      {modal.type === 'homeExpense' && <HomeExpenseModal expense={modal.data} onClose={close} />}
+      {modal.type === 'confirm' && <ConfirmModal {...modal.data} onClose={close} />}
     </>
   )
 }

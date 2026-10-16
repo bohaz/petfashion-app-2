@@ -107,7 +107,7 @@ export interface AppContextValue {
   completeAppointment: (id: string) => Promise<void>
   markFlag: (
     id: string,
-    flag: 'reminder_sent' | 'confirmation_sent' | 'review_requested'
+    flag: 'reminder_sent' | 'confirmation_sent' | 'review_requested',
   ) => Promise<void>
   // Business expenses
   saveBusinessExpense: (exp: Partial<BusinessExpense>) => Promise<void>

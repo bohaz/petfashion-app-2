@@ -40,6 +40,7 @@ App de gestión para Pet Fashion Dog Salon — citas, perros, finanzas del negoc
 ### 4. Obtén las credenciales
 
 En Supabase → **Settings → API**:
+
 - `Project URL` → cópiala
 - `anon / public key` → cópiala
 
@@ -77,12 +78,14 @@ Abre [http://localhost:3000](http://localhost:3000)
 ## Instalar como app en el celular (PWA)
 
 **iPhone (iOS 16.4+):**
+
 1. Abre la URL de tu app en Safari
 2. Toca el ícono de compartir
 3. "Agregar a pantalla de inicio"
 4. Ya funciona como app nativa
 
 **Android:**
+
 1. Abre la URL en Chrome
 2. Toca el menú (3 puntos) → "Agregar a pantalla de inicio" o "Instalar app"
 

@@ -10,9 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 overflow-auto">
           {/* mobile spacer for topbar */}
           <div className="md:hidden h-14" />
-          <div className="max-w-3xl mx-auto px-4 md:px-8 pt-6 pb-10">
-            {children}
-          </div>
+          <div className="max-w-3xl mx-auto px-4 md:px-8 pt-6 pb-10">{children}</div>
         </main>
       </div>
       <ModalManager />
