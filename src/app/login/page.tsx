@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
-import { DogIcon } from '@/components/ui/DogIcon'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 
 export default function LoginPage() {
   const supabase = createClient()
@@ -47,23 +47,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm relative">
         {/* Header */}
         <div className="text-center mb-10">
-          <div
-            className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
-            style={{
-              background: 'rgba(201,146,42,0.1)',
-              border: '1px solid var(--pf-gold-border)',
-              color: 'var(--pf-gold)',
-            }}
-          >
-            <DogIcon size={28} />
-          </div>
-          <h1 className="font-display text-3xl text-white">
-            Pet{' '}
-            <em className="italic" style={{ color: 'var(--pf-gold-l)' }}>
-              Fashion
-            </em>
+          <h1 className="flex justify-center">
+            <BrandLogo height={44} priority />
           </h1>
-          <p className="text-xs mt-1.5 tracking-wider" style={{ color: 'rgba(245,240,232,0.35)' }}>
+          <p className="text-xs mt-3 tracking-wider" style={{ color: 'rgba(245,240,232,0.35)' }}>
             SISTEMA DE GESTIÓN
           </p>
         </div>
