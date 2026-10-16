@@ -1,0 +1,25 @@
+name: Keep Supabase active
+
+# Supabase pauses free projects after about a week without activity.
+# This sends one small read every three days so the database stays awake.
+# It returns no rows (row-level security only allows signed-in users),
+# but the query still counts as activity.
+
+on:
+  schedule:
+    - cron: '17 12 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query the settings table
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          curl --fail --silent --show-error --max-time 30 \
+            "$SUPABASE_URL/rest/v1/settings?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY"
