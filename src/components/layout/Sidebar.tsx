@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Menu, X, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { BrandLogo } from '@/components/ui/BrandLogo'
 import { DogIcon } from '@/components/ui/DogIcon'
 
 const NAV_ITEMS = [
@@ -123,28 +124,14 @@ export function Sidebar() {
           className="px-5 py-5 flex items-center justify-between"
           style={{ borderBottom: '1px solid var(--pf-border)' }}
         >
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-              style={{
-                background: 'rgba(201,146,42,0.1)',
-                border: '1px solid var(--pf-gold-border)',
-                color: 'var(--pf-gold)',
-              }}
+          <div>
+            <BrandLogo height={30} priority />
+            <p
+              className="text-[10px] mt-1.5 tracking-wider"
+              style={{ color: 'rgba(245,240,232,0.35)' }}
             >
-              <DogIcon size={18} />
-            </div>
-            <div>
-              <p className="font-display text-base text-white leading-tight">
-                Pet{' '}
-                <em className="italic" style={{ color: 'var(--pf-gold-l)' }}>
-                  Fashion
-                </em>
-              </p>
-              <p className="text-[10px]" style={{ color: 'rgba(245,240,232,0.35)' }}>
-                Dog Salon
-              </p>
-            </div>
+              SISTEMA DE GESTIÓN
+            </p>
           </div>
           <button
             onClick={() => setOpen(false)}
@@ -200,15 +187,7 @@ export function Sidebar() {
         className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 h-14"
         style={{ background: 'var(--pf-bg2)', borderBottom: '1px solid var(--pf-border)' }}
       >
-        <div className="flex items-center gap-2" style={{ color: 'var(--pf-gold)' }}>
-          <DogIcon size={18} />
-          <p className="font-display text-base text-white">
-            Pet{' '}
-            <em className="italic" style={{ color: 'var(--pf-gold-l)' }}>
-              Fashion
-            </em>
-          </p>
-        </div>
+        <BrandLogo height={28} priority />
         <button
           onClick={() => setOpen(true)}
           className="p-2 rounded-xl hover:bg-white/5 transition-colors"
