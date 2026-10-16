@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { DEFAULT_SETTINGS } from '@/lib/constants'
-import { calcPrice, calcDuration, sizeFromWeight, addMinutes, fromLocalInput } from '@/lib/utils'
+import { mergeSettings } from '@/lib/settings'
 import type {
   AppContextValue,
   AppSettings,
@@ -81,16 +81,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setBusinessExpenses(bizData || [])
       setHomeExpenses(homeData || [])
 
-      if (settingsData) {
-        const s = settingsData as Record<string, unknown>
-        setSettingsState({
-          ...DEFAULT_SETTINGS,
-          prices: { ...DEFAULT_SETTINGS.prices, ...((s.prices as object) || {}) },
-          durations: { ...DEFAULT_SETTINGS.durations, ...((s.durations as object) || {}) },
-          templates: { ...DEFAULT_SETTINGS.templates, ...((s.templates as object) || {}) },
-          business: { ...DEFAULT_SETTINGS.business, ...((s.business as object) || {}) },
-        })
-      }
+      if (settingsData) setSettingsState(mergeSettings(settingsData))
       setLoading(false)
     }
     load()
@@ -136,16 +127,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, async () => {
         const { data } = await supabase.from('settings').select('*').eq('id', 1).single()
-        if (data) {
-          const s = data as Record<string, unknown>
-          setSettingsState({
-            ...DEFAULT_SETTINGS,
-            prices: { ...DEFAULT_SETTINGS.prices, ...((s.prices as object) || {}) },
-            durations: { ...DEFAULT_SETTINGS.durations, ...((s.durations as object) || {}) },
-            templates: { ...DEFAULT_SETTINGS.templates, ...((s.templates as object) || {}) },
-            business: { ...DEFAULT_SETTINGS.business, ...((s.business as object) || {}) },
-          })
-        }
+        if (data) setSettingsState(mergeSettings(data))
       })
       .subscribe()
 
@@ -191,7 +173,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteDog = useCallback(
     async (id: string) => {
-      await supabase.from('appointments').update({ dog_id: null }).eq('dog_id', id)
+      // appointments.dog_id is "on delete set null", so past appointments keep
+      // their data and just lose the link to the dog.
       const { error } = await supabase.from('dogs').delete().eq('id', id)
       if (error) {
         showToast('Error al eliminar', 'error')
@@ -264,19 +247,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async (id: string) => {
       const apt = appointments.find((a) => a.id === id)
       if (!apt) return
-      await supabase
+      const { error } = await supabase
         .from('appointments')
         .update({ status: 'completada', completed_at: new Date().toISOString() })
         .eq('id', id)
+      if (error) {
+        showToast('Error al completar la cita', 'error')
+        return
+      }
       if (apt.dog_id) {
         const dog = dogs.find((d) => d.id === apt.dog_id)
-        await supabase
+        const { error: dogError } = await supabase
           .from('dogs')
           .update({
             last_visit: apt.start_time,
             visit_count: (dog?.visit_count || 0) + 1,
           })
           .eq('id', apt.dog_id)
+        if (dogError) {
+          // The income is already recorded; only the dog's visit history failed.
+          showToast('Cita completada, pero no se actualizó la ficha del perro', 'error')
+          return
+        }
       }
       showToast('Cita completada · Ingreso registrado')
     },
@@ -285,12 +277,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const markFlag = useCallback(
     async (id: string, flag: 'reminder_sent' | 'confirmation_sent' | 'review_requested') => {
-      await supabase
+      const { error } = await supabase
         .from('appointments')
         .update({ [flag]: true })
         .eq('id', id)
+      if (error) showToast('No se pudo marcar el mensaje como enviado', 'error')
     },
-    [supabase],
+    [supabase, showToast],
   )
 
   // ── Business Expenses CRUD ────────────────────────────────
@@ -324,7 +317,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteBusinessExpense = useCallback(
     async (id: string) => {
-      await supabase.from('business_expenses').delete().eq('id', id)
+      const { error } = await supabase.from('business_expenses').delete().eq('id', id)
+      if (error) {
+        showToast('Error al eliminar', 'error')
+        return
+      }
       showToast('Egreso eliminado')
     },
     [supabase, showToast],
@@ -361,7 +358,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const deleteHomeExpense = useCallback(
     async (id: string) => {
-      await supabase.from('home_expenses').delete().eq('id', id)
+      const { error } = await supabase.from('home_expenses').delete().eq('id', id)
+      if (error) {
+        showToast('Error al eliminar', 'error')
+        return
+      }
       showToast('Gasto eliminado')
     },
     [supabase, showToast],
@@ -422,7 +423,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={value}>
       {children}
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+        <div
+          role={toast.type === 'error' ? 'alert' : 'status'}
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+        >
           <div
             className={`px-4 py-2.5 rounded-full text-sm font-medium shadow-lg whitespace-nowrap ${
               toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-stone-900 text-white'
@@ -435,6 +439,3 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     </AppContext.Provider>
   )
 }
-
-// Re-export helpers so pages can import from one place
-export { calcPrice, calcDuration, sizeFromWeight, addMinutes, fromLocalInput }
