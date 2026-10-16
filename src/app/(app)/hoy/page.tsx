@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useApp } from '@/components/AppProvider'
 import { AppointmentCard } from '@/components/appointments/AppointmentCard'
@@ -13,32 +12,24 @@ export default function HoyPage() {
   const router = useRouter()
   const now = new Date()
 
-  const todayApts = useMemo(
-    () =>
-      appointments
-        .filter((a) => sameDay(a.start_time, now))
-        .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()),
-    [appointments],
-  ) // eslint-disable-line react-hooks/exhaustive-deps
+  // Plain filters, recomputed on every render: they are cheap, and "today"
+  // must stay correct if the app is left open past midnight.
+  const todayApts = appointments
+    .filter((a) => sameDay(a.start_time, now))
+    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
 
-  const tomorrowApts = useMemo(() => {
-    const t = new Date(now)
-    t.setDate(t.getDate() + 1)
-    return appointments.filter(
-      (a) => sameDay(a.start_time, t) && !a.reminder_sent && a.status !== 'cancelada',
-    )
-  }, [appointments]) // eslint-disable-line react-hooks/exhaustive-deps
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const tomorrowApts = appointments.filter(
+    (a) => sameDay(a.start_time, tomorrow) && !a.reminder_sent && a.status !== 'cancelada',
+  )
 
-  const reviewsPending = useMemo(
-    () =>
-      appointments.filter(
-        (a) =>
-          a.status === 'completada' &&
-          !a.review_requested &&
-          a.completed_at &&
-          Date.now() - new Date(a.completed_at).getTime() < 1000 * 60 * 60 * 24 * 2,
-      ),
-    [appointments],
+  const reviewsPending = appointments.filter(
+    (a) =>
+      a.status === 'completada' &&
+      !a.review_requested &&
+      a.completed_at &&
+      now.getTime() - new Date(a.completed_at).getTime() < 1000 * 60 * 60 * 24 * 2,
   )
 
   const expectedToday = todayApts
