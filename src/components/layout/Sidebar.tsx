@@ -34,7 +34,7 @@ const NAV_ITEMS = [
   {
     href: '/perros',
     label: 'Perros',
-    icon: (active: boolean) => <DogIcon size={17} />,
+    icon: () => <DogIcon size={17} />,
   },
   {
     href: '/finanzas',

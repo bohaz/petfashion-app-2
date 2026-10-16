@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useApp } from '@/components/AppProvider'
 import { SERVICES } from '@/lib/constants'
-import { fmtCLP } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Download, LogOut } from 'lucide-react'
