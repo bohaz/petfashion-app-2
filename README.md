@@ -73,6 +73,8 @@ npm run dev        # http://localhost:3000
 
 To deploy on Vercel, import the repo and add the same two environment variables.
 
+Supabase pauses free projects after about a week without use. The _Keep Supabase active_ workflow sends one small query every three days to prevent that. It needs two repository secrets (_Settings → Secrets and variables → Actions_): `SUPABASE_URL` and `SUPABASE_ANON_KEY`, with the same values as above.
+
 | Script                        | What it does                                               |
 | ----------------------------- | ---------------------------------------------------------- |
 | `npm run dev`                 | Development server                                         |
