@@ -2,10 +2,40 @@ import type { AppSettings, DogSize, ServiceKey } from './types'
 
 // ── Formatting ────────────────────────────────────────────────
 
-export const fmtCLP = (n: number): string => '$' + Math.round(n || 0).toLocaleString('es-CL')
+// ── Dates ─────────────────────────────────────────────────────
+
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Parses an ISO timestamp or a date-only string (YYYY-MM-DD, as Postgres
+ * returns `date` columns). Date-only strings are read as local midnight:
+ * new Date('2026-10-01') would be UTC midnight, which in Chile is still
+ * 30 September.
+ */
+export const parseDate = (value: string | Date): Date => {
+  if (value instanceof Date) return new Date(value)
+  if (DATE_ONLY.test(value)) {
+    const [y, m, d] = value.split('-').map(Number)
+    return new Date(y, m - 1, d)
+  }
+  return new Date(value)
+}
+
+/** YYYY-MM-DD in local time, for `date` columns and date inputs. */
+export const toDateKey = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+// ── Formatting ────────────────────────────────────────────────
+
+/** Chilean pesos, no decimals: 12500 → "$12.500", -3000 → "-$3.000". */
+export const fmtCLP = (n: number): string => {
+  const value = Math.round(n || 0)
+  const formatted = '$' + Math.abs(value).toLocaleString('es-CL')
+  return value < 0 ? '-' + formatted : formatted
+}
 
 export const fmtDateLong = (iso: string): string => {
-  const d = new Date(iso)
+  const d = parseDate(iso)
   const days = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
   const months = [
     'enero',
@@ -25,7 +55,7 @@ export const fmtDateLong = (iso: string): string => {
 }
 
 export const fmtDateShort = (iso: string): string => {
-  const d = new Date(iso)
+  const d = parseDate(iso)
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`
 }
 
@@ -64,8 +94,8 @@ export const addMinutes = (iso: string, mins: number): string =>
   new Date(new Date(iso).getTime() + mins * 60000).toISOString()
 
 export const sameDay = (a: string | Date, b: string | Date): boolean => {
-  const x = new Date(a),
-    y = new Date(b)
+  const x = parseDate(a),
+    y = parseDate(b)
   return (
     x.getFullYear() === y.getFullYear() &&
     x.getMonth() === y.getMonth() &&

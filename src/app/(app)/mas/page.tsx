@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useApp } from '@/components/AppProvider'
+import { toDateKey } from '@/lib/utils'
 import { SERVICES } from '@/lib/constants'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
@@ -72,7 +73,7 @@ export default function MasPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `petfashion_backup_${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `petfashion_backup_${toDateKey(new Date())}.csv`
     a.click()
     URL.revokeObjectURL(url)
     showToast('CSV exportado')

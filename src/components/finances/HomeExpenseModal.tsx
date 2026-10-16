@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useApp } from '@/components/AppProvider'
+import { toDateKey } from '@/lib/utils'
 import { ModalShell } from '@/components/ui'
 import { HOME_CATEGORIES } from '@/lib/constants'
 import type { HomeExpense } from '@/lib/types'
@@ -17,7 +18,7 @@ export function HomeExpenseModal({ expense, onClose }: Props) {
   const isEdit = !!expense?.id
   const [saving, setSaving] = useState(false)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = toDateKey(new Date())
 
   const [category, setCategory] = useState(expense?.category || Object.keys(HOME_CATEGORIES)[0])
 
